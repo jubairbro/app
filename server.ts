@@ -219,6 +219,32 @@ async function startServer() {
     });
   });
 
+  // Reports
+  app.get('/api/reports', requireAuth, (req, res) => {
+    // Get sales grouped by date for the last 30 days
+    const salesByDate = db.prepare(`
+      SELECT date(createdAt) as date, SUM(finalAmount) as totalSales, SUM(paidAmount) as totalPaid, SUM(dueAmount) as totalDue
+      FROM sales
+      GROUP BY date(createdAt)
+      ORDER BY date(createdAt) DESC
+      LIMIT 30
+    `).all();
+
+    // Get top selling products
+    const topProducts = db.prepare(`
+      SELECT name, SUM(quantity) as totalQuantity, SUM(quantity * salePrice) as totalRevenue
+      FROM sale_items
+      GROUP BY productId
+      ORDER BY totalQuantity DESC
+      LIMIT 5
+    `).all();
+
+    res.json({
+      salesByDate: salesByDate.reverse(), // chronological order
+      topProducts
+    });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

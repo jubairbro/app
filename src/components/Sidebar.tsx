@@ -6,13 +6,14 @@ import {
   FileText, 
   BookOpen, 
   BarChart3, 
-  LogOut 
+  LogOut,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchApi } from "@/lib/api";
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const { role, setUser } = useAuth();
   const isAdmin = role === "admin";
   const navigate = useNavigate();
@@ -39,10 +40,20 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-primary text-primary-foreground">
+    <div className="flex h-screen w-64 flex-col bg-primary text-primary-foreground relative">
       <div className="flex flex-col items-center justify-center h-24 border-b border-primary-foreground/10 px-4 text-center">
         <h1 className="text-xl font-bold text-accent">মেসার্স সৈকত মেশিনারি</h1>
         <p className="text-xs text-primary-foreground/70 mt-1">প্রোঃ মোঃ বজলুর রশিদ</p>
+        
+        {/* Mobile Close Button */}
+        {onClose && (
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 p-1 rounded-md hover:bg-primary-foreground/10 md:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
       
       <nav className="flex-1 overflow-y-auto py-4">

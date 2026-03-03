@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, ShoppingCart, Trash2, Image as ImageIcon } from "lucide-react";
+import { Search, ShoppingCart, Trash2, Image as ImageIcon, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Select } from "@/components/ui/select-native";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchApi } from "@/lib/api";
 
@@ -166,6 +166,14 @@ const Sales = () => {
             className="flex-1"
           />
           <Button variant="outline"><Search className="h-4 w-4" /></Button>
+          {isAdmin && (
+            <Button variant="secondary" asChild>
+              <Link to="/inventory">
+                <Plus className="mr-2 h-4 w-4" />
+                নতুন পণ্য
+              </Link>
+            </Button>
+          )}
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto pr-2">

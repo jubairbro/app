@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, DollarSign } from "lucide-react";
+import { Search, DollarSign, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { fetchApi } from "@/lib/api";
+import { Link } from "react-router-dom";
 
 interface Customer {
   id: string;
@@ -74,7 +75,15 @@ const DueBook = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-primary">বাকি খাতা</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-bold text-primary">বাকি খাতা</h1>
+        <Button asChild>
+          <Link to="/sales">
+            <Plus className="mr-2 h-4 w-4" />
+            নতুন বিক্রয়
+          </Link>
+        </Button>
+      </div>
 
       <div className="flex items-center space-x-2">
         <div className="relative flex-1 max-w-sm">

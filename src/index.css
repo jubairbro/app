@@ -4,29 +4,71 @@
 @theme {
   --font-sans: "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
   
-  --color-primary: #1E2A38;
-  --color-primary-foreground: #ffffff;
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   
-  --color-accent: #C9A227;
-  --color-accent-foreground: #1E2A38;
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   
-  --color-background: #F4F6F8;
-  --color-foreground: #1E2A38;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
   
-  --color-danger: #C0392B;
-  --color-danger-foreground: #ffffff;
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
   
-  --color-muted: #94a3b8;
-  --color-muted-foreground: #475569;
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   
-  --color-card: #ffffff;
-  --color-card-foreground: #1E2A38;
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   
-  --color-border: #e2e8f0;
+  --color-border: var(--border);
 }
 
 @layer base {
+  :root {
+    --primary: #1E2A38;
+    --primary-foreground: #ffffff;
+    --accent: #C9A227;
+    --accent-foreground: #1E2A38;
+    --background: #F4F6F8;
+    --foreground: #1E2A38;
+    --danger: #C0392B;
+    --danger-foreground: #ffffff;
+    --muted: #94a3b8;
+    --muted-foreground: #475569;
+    --card: #ffffff;
+    --card-foreground: #1E2A38;
+    --border: #e2e8f0;
+  }
+
+  .dark {
+    --primary: #0f172a;
+    --primary-foreground: #f8fafc;
+    --accent: #eab308;
+    --accent-foreground: #0f172a;
+    --background: #020617;
+    --foreground: #f8fafc;
+    --danger: #ef4444;
+    --danger-foreground: #ffffff;
+    --muted: #334155;
+    --muted-foreground: #94a3b8;
+    --card: #0f172a;
+    --card-foreground: #f8fafc;
+    --border: #1e293b;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .animate-marquee {
+    animation: marquee 20s linear infinite;
+  }
+  @keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
   }
 }

@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Edit, Trash2, AlertTriangle, Image as ImageIcon } from "lucide-react";
+import { Plus, Search, Edit, Trash2, AlertTriangle, Image as ImageIcon, ShoppingCart } from "lucide-react";
 import ProductDialog from "@/components/ProductDialog";
 import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchApi } from "@/lib/api";
+import { Link } from "react-router-dom";
 
 interface Product {
   id: string;
@@ -61,10 +62,18 @@ const Inventory = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold text-primary">ইনভেন্টরি</h1>
         {isAdmin && (
-          <Button onClick={() => { setProductToEdit(null); setIsDialogOpen(true); }}>
-            <Plus className="mr-2 h-4 w-4" />
-            নতুন পণ্য যোগ করুন
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/sales">
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                বিক্রয় করুন
+              </Link>
+            </Button>
+            <Button onClick={() => { setProductToEdit(null); setIsDialogOpen(true); }}>
+              <Plus className="mr-2 h-4 w-4" />
+              নতুন পণ্য যোগ করুন
+            </Button>
+          </div>
         )}
       </div>
 

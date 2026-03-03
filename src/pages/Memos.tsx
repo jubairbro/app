@@ -2,12 +2,13 @@ import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Printer, Eye } from "lucide-react";
+import { Search, Printer, Eye, Plus } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useReactToPrint } from "react-to-print";
 import { Invoice } from "@/components/Invoice";
 import { fetchApi } from "@/lib/api";
+import { Link } from "react-router-dom";
 
 interface Sale {
   id: string;
@@ -54,7 +55,15 @@ const Memos = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-primary">মেমো তালিকা</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-bold text-primary">মেমো তালিকা</h1>
+        <Button asChild>
+          <Link to="/sales">
+            <Plus className="mr-2 h-4 w-4" />
+            নতুন বিক্রয়
+          </Link>
+        </Button>
+      </div>
 
       <div className="flex items-center space-x-2">
         <div className="relative flex-1 max-w-sm">
