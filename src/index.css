@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-primary: #1E2A38;
+  --color-primary-foreground: #ffffff;
+  
+  --color-accent: #C9A227;
+  --color-accent-foreground: #1E2A38;
+  
+  --color-background: #F4F6F8;
+  --color-foreground: #1E2A38;
+  
+  --color-danger: #C0392B;
+  --color-danger-foreground: #ffffff;
+  
+  --color-muted: #94a3b8;
+  --color-muted-foreground: #475569;
+  
+  --color-card: #ffffff;
+  --color-card-foreground: #1E2A38;
+  
+  --color-border: #e2e8f0;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
