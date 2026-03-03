@@ -3,11 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import RequireAuth from "@/components/RequireAuth";
 import Layout from "@/components/Layout";
 import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import Inventory from "@/pages/Inventory";
 import Sales from "@/pages/Sales";
@@ -28,17 +30,18 @@ export default function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           
-          <Route element={<RequireAuth><Layout /></RequireAuth>}>
-            <Route path="/" element={<AdminRoute><Dashboard /></AdminRoute>} />
+          <Route element={<Layout />}>
+            <Route path="/" element={<RequireAuth><AdminRoute><Dashboard /></AdminRoute></RequireAuth>} />
             <Route path="/inventory" element={<Inventory />} />
-            <Route path="/sales" element={<Sales />} />
-            <Route path="/memos" element={<AdminRoute><Memos /></AdminRoute>} />
-            <Route path="/due-book" element={<AdminRoute><DueBook /></AdminRoute>} />
-            <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
+            <Route path="/sales" element={<RequireAuth><AdminRoute><Sales /></AdminRoute></RequireAuth>} />
+            <Route path="/memos" element={<RequireAuth><AdminRoute><Memos /></AdminRoute></RequireAuth>} />
+            <Route path="/due-book" element={<RequireAuth><AdminRoute><DueBook /></AdminRoute></RequireAuth>} />
+            <Route path="/reports" element={<RequireAuth><AdminRoute><Reports /></AdminRoute></RequireAuth>} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/inventory" replace />} />
         </Routes>
       </Router>
     </AuthProvider>

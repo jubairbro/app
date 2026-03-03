@@ -51,6 +51,31 @@ async function startServer() {
   // --- API ROUTES ---
 
   // Auth
+  app.post('/api/auth/register', (req, res) => {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    try {
+      const existingUser = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
+
+      const hash = bcrypt.hashSync(password, 10);
+      const info = db.prepare('INSERT INTO users (email, password, role) VALUES (?, ?, ?)').run(email, hash, 'user');
+      
+      const token = jwt.sign({ id: info.lastInsertRowid, email, role: 'user' }, JWT_SECRET, { expiresIn: '7d' });
+      res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' });
+      res.json({ user: { id: info.lastInsertRowid, email, role: 'user' } });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   app.post('/api/auth/login', (req, res) => {
     const { email, password } = req.body;
     const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
@@ -72,7 +97,7 @@ async function startServer() {
   });
 
   // Products
-  app.get('/api/products', requireAuth, (req, res) => {
+  app.get('/api/products', (req, res) => {
     const products = db.prepare('SELECT * FROM products ORDER BY name').all();
     res.json(products);
   });
@@ -209,7 +234,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(\`Server running on http://localhost:\${PORT}\`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 

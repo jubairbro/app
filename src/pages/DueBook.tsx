@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, where, runTransaction, doc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,6 +6,7 @@ import { Search, DollarSign } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { fetchApi } from "@/lib/api";
 
 interface Customer {
   id: string;
@@ -24,12 +23,18 @@ const DueBook = () => {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
+  const fetchCustomers = async () => {
+    try {
+      const data = await fetchApi('/api/customers');
+      // Only show customers with due > 0
+      setCustomers(data.filter((c: Customer) => c.totalDue > 0));
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  };
+
   useEffect(() => {
-    const q = query(collection(db, "customers"), where("totalDue", ">", 0));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setCustomers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer)));
-    });
-    return () => unsubscribe();
+    fetchCustomers();
   }, []);
 
   const handlePayment = async () => {
@@ -45,33 +50,20 @@ const DueBook = () => {
     }
 
     try {
-      await runTransaction(db, async (transaction) => {
-        const customerRef = doc(db, "customers", selectedCustomer.id);
-        const customerDoc = await transaction.get(customerRef);
-        if (!customerDoc.exists()) throw "Customer not found";
-        
-        const currentDue = customerDoc.data().totalDue;
-        const newDue = currentDue - amount;
-        
-        transaction.update(customerRef, { totalDue: newDue });
-        
-        // Optional: Record payment history in a subcollection or separate collection
-        const paymentRef = doc(collection(db, "payments"));
-        transaction.set(paymentRef, {
-          customerId: selectedCustomer.id,
-          amount: amount,
-          date: serverTimestamp(),
-          type: "due_payment"
-        });
+      await fetchApi(`/api/customers/${selectedCustomer.id}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
       });
 
       alert("জমা সফল হয়েছে!");
       setIsPaymentOpen(false);
       setPaymentAmount("");
       setSelectedCustomer(null);
-    } catch (error) {
+      fetchCustomers();
+    } catch (error: any) {
       console.error("Payment failed:", error);
-      alert("জমা ব্যর্থ হয়েছে!");
+      alert(error.message || "জমা ব্যর্থ হয়েছে!");
     }
   };
 

@@ -55,25 +55,30 @@ const Sales = () => {
     fetchProducts();
   }, []);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, priceType: "retail" | "wholesale" = "retail") => {
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      const existing = prev.find(item => item.id === product.id && item.priceType === priceType);
       if (existing) {
         return prev.map(item => 
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === product.id && item.priceType === priceType ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { ...product, quantity: 1, priceType: "retail", salePrice: product.retailPrice }];
+      return [...prev, { 
+        ...product, 
+        quantity: 1, 
+        priceType, 
+        salePrice: priceType === "retail" ? product.retailPrice : product.wholesalePrice 
+      }];
     });
   };
 
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+  const removeFromCart = (id: string, priceType: "retail" | "wholesale") => {
+    setCart(prev => prev.filter(item => !(item.id === id && item.priceType === priceType)));
   };
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateQuantity = (id: string, priceType: "retail" | "wholesale", delta: number) => {
     setCart(prev => prev.map(item => {
-      if (item.id === id) {
+      if (item.id === id && item.priceType === priceType) {
         const newQty = Math.max(1, item.quantity + delta);
         if (newQty > item.stock) {
           alert(`স্টক এ পর্যাপ্ত পণ্য নেই! বর্তমান স্টক: ${item.stock}`);
@@ -165,7 +170,7 @@ const Sales = () => {
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto pr-2">
           {filteredProducts.map(product => (
-            <Card key={product.id} className="cursor-pointer hover:border-primary transition-colors overflow-hidden" onClick={() => addToCart(product)}>
+            <Card key={product.id} className="overflow-hidden flex flex-col">
               <div className="h-32 w-full bg-muted flex items-center justify-center">
                 {product.imageUrl ? (
                   <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
@@ -173,15 +178,38 @@ const Sales = () => {
                   <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
                 )}
               </div>
-              <CardContent className="p-4 flex flex-col justify-between">
+              <CardContent className="p-4 flex flex-col justify-between flex-1">
                 <div>
                   <h3 className="font-bold text-lg truncate" title={product.name}>{product.name}</h3>
                   <p className="text-sm text-muted-foreground">{product.category}</p>
                 </div>
-                <div className="mt-2">
-                  <p className="font-medium text-primary">খুচরা: {formatCurrency(product.retailPrice)}</p>
-                  {isAdmin && <p className="text-sm text-muted-foreground">পাইকারি: {formatCurrency(product.wholesalePrice)}</p>}
-                  <p className="text-xs text-muted-foreground">স্টক: {product.stock} {product.unit}</p>
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">স্টক:</span>
+                    <span className="font-medium">{product.stock} {product.unit}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full flex flex-col items-center py-6 h-auto"
+                      onClick={() => addToCart(product, "retail")}
+                    >
+                      <span className="text-xs font-normal">খুচরা</span>
+                      <span className="font-bold">{formatCurrency(product.retailPrice)}</span>
+                    </Button>
+                    {isAdmin && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full flex flex-col items-center py-6 h-auto border-primary/20 hover:border-primary/50"
+                        onClick={() => addToCart(product, "wholesale")}
+                      >
+                        <span className="text-xs font-normal">পাইকারি</span>
+                        <span className="font-bold">{formatCurrency(product.wholesalePrice)}</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -199,31 +227,26 @@ const Sales = () => {
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {cart.map(item => (
-            <div key={item.id} className="flex flex-col gap-2 border-b pb-2 last:border-0">
+          {cart.map((item, index) => (
+            <div key={`${item.id}-${item.priceType}-${index}`} className="flex flex-col gap-2 border-b pb-2 last:border-0">
               <div className="flex justify-between items-start">
-                <h4 className="font-medium">{item.name}</h4>
-                <button onClick={() => removeFromCart(item.id)} className="text-danger hover:bg-danger/10 p-1 rounded">
+                <div>
+                  <h4 className="font-medium">{item.name}</h4>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                    {item.priceType === 'retail' ? 'খুচরা' : 'পাইকারি'}
+                  </span>
+                </div>
+                <button onClick={() => removeFromCart(item.id, item.priceType)} className="text-danger hover:bg-danger/10 p-1 rounded">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
               
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center border rounded-md">
-                  <button onClick={() => updateQuantity(item.id, -1)} className="px-2 py-1 hover:bg-muted">-</button>
+                  <button onClick={() => updateQuantity(item.id, item.priceType, -1)} className="px-2 py-1 hover:bg-muted">-</button>
                   <span className="px-2 text-sm font-medium">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, 1)} className="px-2 py-1 hover:bg-muted">+</button>
+                  <button onClick={() => updateQuantity(item.id, item.priceType, 1)} className="px-2 py-1 hover:bg-muted">+</button>
                 </div>
-                
-                <Select 
-                  value={item.priceType} 
-                  onChange={(e) => updatePriceType(item.id, e.target.value as "retail" | "wholesale")}
-                  className="h-8 text-xs w-24"
-                  disabled={!isAdmin}
-                >
-                  <option value="retail">খুচরা</option>
-                  {isAdmin && <option value="wholesale">পাইকারি</option>}
-                </Select>
                 
                 <span className="font-bold text-sm">{formatCurrency(item.salePrice * item.quantity)}</span>
               </div>

@@ -48,6 +48,7 @@ const Memos = () => {
   const filteredSales = sales.filter(sale => 
     sale.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     sale.customerPhone.includes(searchTerm) ||
+    (sale.customerAddress && sale.customerAddress.toLowerCase().includes(searchTerm.toLowerCase())) ||
     sale.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
   );
 

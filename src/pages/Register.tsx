@@ -7,21 +7,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 
-const Login = () => {
+const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (password !== confirmPassword) {
+      return setError("পাসওয়ার্ড মিলছে না।");
+    }
+
     setLoading(true);
 
     try {
-      const data = await fetchApi('/api/auth/login', {
+      const data = await fetchApi('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -29,13 +35,9 @@ const Login = () => {
         body: JSON.stringify({ email, password }),
       });
       setUser(data.user);
-      if (data.user.role === 'admin') {
-        navigate("/");
-      } else {
-        navigate("/inventory");
-      }
+      navigate("/inventory");
     } catch (err: any) {
-      setError(err.message || "লগইন ব্যর্থ হয়েছে। সঠিক ইমেইল এবং পাসওয়ার্ড দিন।");
+      setError(err.message || "রেজিস্ট্রেশন ব্যর্থ হয়েছে। অন্য ইমেইল দিয়ে চেষ্টা করুন।");
     } finally {
       setLoading(false);
     }
@@ -48,49 +50,54 @@ const Login = () => {
           <CardTitle className="text-2xl font-bold text-primary">
             মেসার্স সৈকত মেশিনারি
           </CardTitle>
-          <p className="text-muted-foreground">অ্যাকাউন্টে লগইন করুন</p>
+          <p className="text-muted-foreground">নতুন অ্যাকাউন্ট তৈরি করুন</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4">
             {error && (
-              <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
                 <AlertCircle className="h-4 w-4" />
-                {error}
+                <p>{error}</p>
               </div>
             )}
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                ইমেইল
-              </label>
+              <label className="text-sm font-medium">ইমেইল</label>
               <Input
-                id="email"
                 type="email"
-                placeholder="admin@saikat.com"
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
+                placeholder="আপনার ইমেইল দিন"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                পাসওয়ার্ড
-              </label>
+              <label className="text-sm font-medium">পাসওয়ার্ড</label>
               <Input
-                id="password"
                 type="password"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="পাসওয়ার্ড দিন"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">কনফার্ম পাসওয়ার্ড</label>
+              <Input
+                type="password"
                 required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="আবার পাসওয়ার্ড দিন"
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "লগইন হচ্ছে..." : "লগইন"}
+              {loading ? "অপেক্ষা করুন..." : "রেজিস্টার করুন"}
             </Button>
             
             <div className="text-center text-sm text-muted-foreground mt-4">
-              অ্যাকাউন্ট নেই?{" "}
-              <Link to="/register" className="text-primary hover:underline font-medium">
-                নতুন অ্যাকাউন্ট তৈরি করুন
+              আগে থেকে অ্যাকাউন্ট থাকলে?{" "}
+              <Link to="/login" className="text-primary hover:underline font-medium">
+                লগইন করুন
               </Link>
             </div>
           </form>
@@ -100,4 +107,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

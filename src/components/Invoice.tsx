@@ -47,8 +47,8 @@ export const Invoice = React.forwardRef<HTMLDivElement, InvoiceProps>(({ sale },
           <p><span className="font-bold">ঠিকানা:</span> {sale.customerAddress || "N/A"}</p>
         </div>
         <div className="text-right">
-          <p><span className="font-bold">মেমো নং:</span> {sale.id.slice(0, 8).toUpperCase()}</p>
-          <p><span className="font-bold">তারিখ:</span> {sale.createdAt?.toDate ? formatDate(sale.createdAt.toDate()) : formatDate(new Date())}</p>
+          <p><span className="font-bold">মেমো নং:</span> {sale.id.toString().padStart(6, '0')}</p>
+          <p><span className="font-bold">তারিখ:</span> {sale.createdAt ? formatDate(new Date(sale.createdAt)) : formatDate(new Date())}</p>
         </div>
       </div>
 
