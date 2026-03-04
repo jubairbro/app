@@ -1,35 +1,24 @@
-# Saikat ERP Update Log - March 4, 2026
+# Saikat ERP Update Log - March 4, 2026 (Update 2)
 
-### 1. Login & Security Fixes
-- **Issue:** Login cookies were not persisting on non-HTTPS connections.
-- **Fix:** Updated `main.py` to use a dynamic `secure` flag for cookies. It now only sets `secure=True` if the request is via HTTPS, ensuring compatibility with local development and shared hosting without SSL.
-- **Shared Hosting:** Updated server to listen on `0.0.0.0` instead of `127.0.0.1` for external access.
+### 1. Enhanced Logging System
+- **Backend Logging:** Updated `main.py` with a robust logging configuration that saves all request info and errors to `app.log`.
+- **Request Middleware:** Added middleware to log every HTTP request (Method, Path, Status, Duration).
+- **Global Error Handler:** Added a global exception handler to catch and log any unhandled server errors, making debugging easier on shared hosting.
 
-### 2. Photo Upload & Path Fixes
-- **Issue:** Product photo upload was failing due to an undefined variable `UPLOADS_DIR` in the backend.
-- **Fix:** 
-  - Defined `UPLOADS_DIR` using absolute paths relative to the script location.
-  - Fixed the image saving logic in `create_product` endpoint.
-  - Ensured `uploads/` and `data/` directories are automatically created if missing.
-  - Updated all file paths (Database, Uploads, Static files) to use absolute paths for robust performance on shared hosting (cPanel).
+### 2. Due Book Improvements (Manual Entry)
+- **Manual Due:** Added the ability to add "Old Due" or "Manual Due" for any customer without creating a sale.
+- **New Customer Entry:** Added a dedicated "Add New Customer" button and dialog in the Due Book page for easier onboarding.
+- **Table Actions:** Added "Manual Due" action button directly in the customer list table.
 
-### 3. UI/UX Improvements (Native Popup Replacement)
-- **Issue:** Some actions were using old browser-native `confirm()` popups.
-- **Fix:**
-  - Added `ConfirmDialog` (Styled Radix UI) for **Logout** in the Sidebar.
-  - Added `ConfirmDialog` for **Clear Cart** in the Sales page.
-  - Verified and ensured all "Delete" and "Reset" actions use the custom `ConfirmDialog` instead of browser defaults.
+### 3. Sales Page Enhancements
+- **Existing Customer Selector:** Added a searchable selector to choose from existing customers during checkout.
+- **Real-time Balance Check:** When an existing customer is selected, their current due/advance balance is shown immediately.
+- **Customer Mode Toggle:** Easily switch between "New Customer" and "Existing Customer" modes.
+- **Backend Integration:** Updated the `/api/sales` endpoint to handle both new and existing customer IDs seamlessly.
 
-### 4. Shared Hosting Compatibility (cPanel)
-- The system is now fully optimized for shared hosting:
-  - Absolute path resolution for all assets and database.
-  - Configurable host/port.
-  - Dynamic cookie security.
-  - Python-based backend (FastAPI) compatible with cPanel's "Setup Python App".
-
-### 5. Final Build & Deployment
-- Ran `npm run build` to generate the latest production-ready frontend assets in the `dist/` directory.
-- Pushed all changes to the GitHub repository.
+### 4. Bug Fixes
+- **Notification 404:** Fixed the `/api/notifications` endpoint which was previously returning a 404 error.
+- **Customer Listing:** Customers are now sorted alphabetically for better navigation.
 
 ---
 *Updated by Gemini CLI*

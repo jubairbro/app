@@ -181,6 +181,16 @@ class ExpenseCreate(BaseModel):
     amount: float
     note: Optional[str] = None
 
+class CustomerCreate(BaseModel):
+    name: str
+    phone: str
+    address: Optional[str] = None
+    initialDue: Optional[float] = 0.0
+
+class ManualDueCreate(BaseModel):
+    amount: float
+    reason: Optional[str] = "পুরাতন বাকি"
+
 class SaleItemCreate(BaseModel):
     id: int
     name: str
@@ -190,8 +200,9 @@ class SaleItemCreate(BaseModel):
     unit: str
 
 class SaleCreate(BaseModel):
-    customerName: str
-    customerPhone: str
+    customerId: Optional[int] = None # Existing customer ID
+    customerName: Optional[str] = None
+    customerPhone: Optional[str] = None
     customerAddress: Optional[str] = None
     items: List[SaleItemCreate]
     totalAmount: float
@@ -211,6 +222,14 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = datetime.now()
+    response = await call_next(request)
+    duration = datetime.now() - start_time
+    logger.info(f"{request.method} {request.url.path} - Status: {response.status_code} - Duration: {duration}")
+    return response
+
 @app.on_event("startup")
 def startup_seeding():
     db = SessionLocal()
@@ -218,6 +237,14 @@ def startup_seeding():
         db.add(User(name="Admin", email="admin@saikat.com", password=get_password_hash("@Admin123"), role="admin"))
         db.commit()
     db.close()
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global Error: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "সার্ভারে একটি সমস্যা হয়েছে। দয়া করে লগ ফাইল চেক করুন।"},
+    )
 
 # --- Auth Endpoints ---
 @app.post("/api/auth/login")
@@ -283,34 +310,62 @@ async def delete_product(id: int, db: Session = Depends(get_db)):
 # --- Sales & Ledger ---
 @app.post("/api/sales")
 async def perform_sale(data: SaleCreate, db: Session = Depends(get_db)):
-    # Customer Handling
-    c = db.query(Customer).filter(Customer.phone == data.customerPhone).first()
-    if not c:
-        c = Customer(name=data.customerName, phone=data.customerPhone, address=data.customerAddress, totalDue=data.dueAmount)
-        db.add(c)
-    else:
+    try:
+        # Customer Handling
+        if data.customerId:
+            c = db.query(Customer).get(data.customerId)
+            if not c: raise HTTPException(404, detail="কাস্টমার পাওয়া যায়নি")
+        else:
+            c = db.query(Customer).filter(Customer.phone == data.customerPhone).first()
+            if not c:
+                c = Customer(name=data.customerName, phone=data.customerPhone, address=data.customerAddress, totalDue=0.0)
+                db.add(c)
+                db.flush()
+        
         c.totalDue += data.dueAmount
         if data.customerAddress: c.address = data.customerAddress
-    db.flush()
 
-    sid = f"INV-{datetime.now().strftime('%y%m')}-{uuid.uuid4().hex[:4].upper()}"
-    sale = Sale(id=sid, customerId=c.id, customerName=c.name, customerPhone=c.phone, customerAddress=c.address, totalAmount=data.totalAmount, discount=data.discount, finalAmount=data.finalAmount, paidAmount=data.paidAmount, dueAmount=data.dueAmount, paymentMethod=data.paymentMethod)
-    db.add(sale)
+        sid = f"INV-{datetime.now().strftime('%y%m')}-{uuid.uuid4().hex[:4].upper()}"
+        sale = Sale(id=sid, customerId=c.id, customerName=c.name, customerPhone=c.phone, customerAddress=c.address, totalAmount=data.totalAmount, discount=data.discount, finalAmount=data.finalAmount, paidAmount=data.paidAmount, dueAmount=data.dueAmount, paymentMethod=data.paymentMethod)
+        db.add(sale)
 
-    for item in data.items:
-        p = db.query(Product).get(item.id)
-        if not p or p.stock < item.quantity:
-            db.rollback(); raise HTTPException(400, detail=f"{item.name} স্টকে নেই")
+        for item in data.items:
+            p = db.query(Product).get(item.id)
+            if not p or p.stock < item.quantity:
+                db.rollback(); raise HTTPException(400, detail=f"{item.name} স্টকে নেই")
+            
+            p.stock -= item.quantity
+            db.add(SaleItem(saleId=sid, productId=p.id, name=item.name, quantity=item.quantity, salePrice=item.salePrice, purchasePriceAtSale=p.purchasePrice, priceType=item.priceType, unit=item.unit))
+            db.add(StockLog(productId=p.id, changeAmount=-item.quantity, reason=f"Sale {sid}"))
         
-        p.stock -= item.quantity
-        db.add(SaleItem(saleId=sid, productId=p.id, name=item.name, quantity=item.quantity, salePrice=item.salePrice, purchasePriceAtSale=p.purchasePrice, priceType=item.priceType, unit=item.unit))
-        db.add(StockLog(productId=p.id, changeAmount=-item.quantity, reason=f"Sale {sid}"))
-    
-    db.commit()
-    return {"id": sid}
+        db.commit()
+        return {"id": sid}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Sale Error: {str(e)}")
+        if isinstance(e, HTTPException): raise e
+        raise HTTPException(500, detail=str(e))
 
 @app.get("/api/customers")
-async def list_customers(db: Session = Depends(get_db)): return db.query(Customer).all()
+async def list_customers(db: Session = Depends(get_db)): 
+    return db.query(Customer).order_by(Customer.name).all()
+
+@app.post("/api/customers")
+async def create_customer(data: CustomerCreate, db: Session = Depends(get_db)):
+    existing = db.query(Customer).filter(Customer.phone == data.phone).first()
+    if existing:
+        raise HTTPException(400, detail="এই মোবাইল নম্বর দিয়ে অলরেডি কাস্টমার আছে")
+    c = Customer(name=data.name, phone=data.phone, address=data.address, totalDue=data.initialDue)
+    db.add(c); db.commit(); db.refresh(c)
+    return c
+
+@app.post("/api/customers/{id}/manual-due")
+async def add_manual_due(id: int, data: ManualDueCreate, db: Session = Depends(get_db)):
+    c = db.query(Customer).get(id)
+    if not c: raise HTTPException(404, detail="কাস্টমার পাওয়া যায়নি")
+    c.totalDue += data.amount
+    db.commit()
+    return {"ok": True, "newBalance": c.totalDue}
 
 @app.post("/api/customers/{id}/pay")
 async def customer_payment(id: int, data: Dict[str, float], db: Session = Depends(get_db)):
@@ -353,6 +408,12 @@ async def enterprise_reports(db: Session = Depends(get_db)):
         "monthly": {"revenue": m_sales, "paid": m_paid, "due": m_due, "expense": m_expense, "profit": estimated_profit},
         "charts": {"revenue": [dict(r._mapping) for r in daily_revenue]}
     }
+
+@app.get("/api/notifications")
+async def alerts(db: Session = Depends(get_db)):
+    low = db.query(Product).filter(Product.stock <= Product.minStockLevel).all()
+    n = [{"id": f"ls-{p.id}", "title": "স্টক শেষ", "message": f"{p.name} মাত্র {p.stock} {p.unit} আছে।"} for p in low]
+    return n
 
 @app.get("/api/dashboard")
 async def dashboard_summary(db: Session = Depends(get_db)):

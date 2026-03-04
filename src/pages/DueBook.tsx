@@ -27,6 +27,17 @@ const DueBook = () => {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
+  const [newCustName, setNewCustName] = useState("");
+  const [newCustPhone, setNewCustPhone] = useState("");
+  const [newCustAddress, setNewCustAddress] = useState("");
+  const [newCustInitialDue, setNewCustInitialDue] = useState("");
+  
+  const [isManualDueOpen, setIsManualDueOpen] = useState(false);
+  const [manualDueAmount, setManualDueAmount] = useState("");
+  const [manualDueReason, setManualDueReason] = useState("");
+
   const { toast } = useToast();
 
   const fetchCustomers = async () => {
@@ -44,28 +55,45 @@ const DueBook = () => {
     fetchCustomers();
   }, []);
 
-  const handlePayment = async () => {
-    if (!selectedCustomer || !paymentAmount) return;
-    const amount = Number(paymentAmount);
-    if (amount <= 0) {
-      toast({ title: "সঠিক পরিমাণ দিন", type: "warning" });
-      return;
-    }
-
+  const handleAddCustomer = async () => {
+    if (!newCustName || !newCustPhone) return;
     try {
-      await fetchApi(`/api/customers/${selectedCustomer.id}/pay`, {
+      await fetchApi('/api/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ 
+          name: newCustName, 
+          phone: newCustPhone, 
+          address: newCustAddress, 
+          initialDue: Number(newCustInitialDue) || 0 
+        }),
       });
-
-      toast({ title: "সফল", description: "লেনদেন সম্পন্ন হয়েছে", type: "success" });
-      setIsPaymentOpen(false);
-      setPaymentAmount("");
-      setSelectedCustomer(null);
+      toast({ title: "সফল", description: "নতুন কাস্টমার যোগ করা হয়েছে", type: "success" });
+      setIsAddCustomerOpen(false);
+      setNewCustName(""); setNewCustPhone(""); setNewCustAddress(""); setNewCustInitialDue("");
       fetchCustomers();
     } catch (error: any) {
-      toast({ title: "ব্যর্থ", description: error.message || "লেনদেন করা যায়নি", type: "error" });
+      toast({ title: "ব্যর্থ", description: error.message || "কাস্টমার যোগ করা যায়নি", type: "error" });
+    }
+  };
+
+  const handleManualDue = async () => {
+    if (!selectedCustomer || !manualDueAmount) return;
+    try {
+      await fetchApi(`/api/customers/${selectedCustomer.id}/manual-due`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          amount: Number(manualDueAmount), 
+          reason: manualDueReason 
+        }),
+      });
+      toast({ title: "সফল", description: "পুরাতন বাকি যোগ করা হয়েছে", type: "success" });
+      setIsManualDueOpen(false);
+      setManualDueAmount(""); setManualDueReason("");
+      fetchCustomers();
+    } catch (error: any) {
+      toast({ title: "ব্যর্থ", description: error.message || "বাকি যোগ করা যায়নি", type: "error" });
     }
   };
 
@@ -97,14 +125,22 @@ const DueBook = () => {
           <p className="text-muted-foreground font-medium mt-1">কাস্টমারদের দেনা-পাওনার হিসাব</p>
         </motion.div>
         
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Button asChild className="rounded-2xl h-12 px-6 shadow-lg bg-primary text-white hover:bg-primary/90">
-            <Link to="/sales">
+        <div className="flex flex-wrap gap-3">
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button onClick={() => setIsAddCustomerOpen(true)} className="rounded-2xl h-12 px-6 shadow-lg bg-accent text-accent-foreground hover:bg-accent/90">
               <Plus className="mr-2 h-5 w-5" />
-              নতুন বিক্রয়
-            </Link>
-          </Button>
-        </motion.div>
+              নতুন কাস্টমার
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button asChild className="rounded-2xl h-12 px-6 shadow-lg bg-primary text-white hover:bg-primary/90">
+              <Link to="/sales">
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                নতুন বিক্রয়
+              </Link>
+            </Button>
+          </motion.div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -199,20 +235,36 @@ const DueBook = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-center">
-                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="rounded-xl border-primary/10 hover:bg-primary hover:text-white transition-all font-black text-[10px] uppercase tracking-widest gap-2 h-10 px-4 shadow-sm"
-                          onClick={() => {
-                            setSelectedCustomer(customer);
-                            setIsPaymentOpen(true);
-                          }}
-                        >
-                          <Wallet className="h-4 w-4" />
-                          লেনদেন
-                        </Button>
-                      </motion.div>
+                      <div className="flex items-center justify-center gap-2">
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="rounded-xl border-primary/10 hover:bg-primary hover:text-white transition-all font-black text-[10px] uppercase tracking-widest gap-2 h-10 px-4 shadow-sm"
+                            onClick={() => {
+                              setSelectedCustomer(customer);
+                              setIsPaymentOpen(true);
+                            }}
+                          >
+                            <Wallet className="h-4 w-4" />
+                            লেনদেন
+                          </Button>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="rounded-xl text-danger hover:bg-danger/10 transition-all font-black text-[10px] uppercase tracking-widest gap-2 h-10 px-4"
+                            onClick={() => {
+                              setSelectedCustomer(customer);
+                              setIsManualDueOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4" />
+                            ম্যানুয়াল বাকি
+                          </Button>
+                        </motion.div>
+                      </div>
                     </td>
                   </motion.tr>
                 ))}
@@ -293,6 +345,84 @@ const DueBook = () => {
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button onClick={handlePayment} className="w-full h-20 rounded-[2rem] bg-primary text-primary-foreground font-black text-xl shadow-2xl shadow-primary/30 hover:bg-primary/90 transition-all border-none">
                 লেনদেন সম্পন্ন করুন
+              </Button>
+            </motion.div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Customer Dialog */}
+      <Dialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen}>
+        <DialogContent className="sm:max-w-[500px] rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card/80 backdrop-blur-2xl">
+          <div className="bg-accent p-8 text-accent-foreground flex justify-between items-center">
+            <DialogHeader>
+              <DialogTitle className="text-3xl font-black tracking-tight flex items-center gap-4">
+                <User className="h-8 w-8" />
+                নতুন কাস্টমার
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+          
+          <div className="p-10 space-y-6 text-left">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">কাস্টমারের নাম</Label>
+              <Input className="h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={newCustName} onChange={e => setNewCustName(e.target.value)} placeholder="নাম লিখুন" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">মোবাইল নম্বর</Label>
+              <Input className="h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={newCustPhone} onChange={e => setNewCustPhone(e.target.value)} placeholder="017XXXXXXXX" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">ঠিকানা</Label>
+              <Input className="h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={newCustAddress} onChange={e => setNewCustAddress(e.target.value)} placeholder="ঠিকানা লিখুন" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">পূর্বের বাকি (যদি থাকে)</Label>
+              <Input className="h-14 rounded-2xl bg-danger/5 border-danger/10 font-black text-xl text-danger focus:ring-danger shadow-inner" type="number" value={newCustInitialDue} onChange={e => setNewCustInitialDue(e.target.value)} placeholder="0.00" />
+            </div>
+          </div>
+          
+          <div className="p-10 pt-0">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button onClick={handleAddCustomer} className="w-full h-16 rounded-[2rem] bg-accent text-accent-foreground font-black text-lg shadow-xl hover:bg-accent/90 transition-all border-none">
+                কাস্টমার সেভ করুন
+              </Button>
+            </motion.div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual Due Dialog */}
+      <Dialog open={isManualDueOpen} onOpenChange={setIsManualDueOpen}>
+        <DialogContent className="sm:max-w-[500px] rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card/80 backdrop-blur-2xl">
+          <div className="bg-danger p-8 text-white flex justify-between items-center">
+            <DialogHeader>
+              <DialogTitle className="text-3xl font-black tracking-tight flex items-center gap-4">
+                <Plus className="h-8 w-8" />
+                ম্যানুয়াল বাকি যোগ
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+          
+          <div className="p-10 space-y-6 text-left">
+            <div className="p-6 bg-danger/5 rounded-2xl border border-danger/10">
+              <div className="text-sm font-bold text-danger">কাস্টমার: {selectedCustomer?.name}</div>
+              <div className="text-[10px] font-black uppercase text-muted-foreground mt-1">মোবাইল: {selectedCustomer?.phone}</div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">বাকি টাকার পরিমাণ</Label>
+              <Input className="h-14 rounded-2xl bg-danger/5 border-danger/10 font-black text-2xl text-danger focus:ring-danger shadow-inner" type="number" value={manualDueAmount} onChange={e => setManualDueAmount(e.target.value)} placeholder="0.00" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">কারন (Reason)</Label>
+              <Input className="h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={manualDueReason} onChange={e => setManualDueReason(e.target.value)} placeholder="পুরাতন বাকি / অন্য কিছু" />
+            </div>
+          </div>
+          
+          <div className="p-10 pt-0">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button onClick={handleManualDue} className="w-full h-16 rounded-[2rem] bg-danger text-white font-black text-lg shadow-xl hover:bg-danger/90 transition-all border-none">
+                বাকি যোগ নিশ্চিত করুন
               </Button>
             </motion.div>
           </div>

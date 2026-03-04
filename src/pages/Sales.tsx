@@ -34,11 +34,16 @@ interface CartItem extends Product {
 
 const Sales = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isCartMobileOpen, setIsCartMobileOpen] = useState(false);
   const [isCartClearConfirmOpen, setIsCartClearConfirmOpen] = useState(false);
+  
+  const [customerMode, setCustomerMode] = useState<"existing" | "new">("new");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [customerSearch, setCustomerSearch] = useState("");
   
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -52,65 +57,34 @@ const Sales = () => {
   const isAdmin = role === "admin";
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const loadData = async () => {
       try {
-        const data = await fetchApi('/api/products');
-        setProducts(data);
+        const [prods, custs] = await Promise.all([
+          fetchApi('/api/products'),
+          fetchApi('/api/customers')
+        ]);
+        setProducts(prods);
+        setCustomers(custs);
       } catch (error) {
-        toast({ title: "ভুল হয়েছে", description: "পণ্য লোড করা যায়নি", type: "error" });
+        toast({ title: "ভুল হয়েছে", description: "ডাটা লোড করা যায়নি", type: "error" });
       }
     };
-    fetchProducts();
+    loadData();
   }, [toast]);
 
-  const addToCart = (product: Product, priceType: "retail" | "wholesale" = "retail") => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id && item.priceType === priceType);
-      if (existing) {
-        if (existing.quantity + 1 > product.stock) {
-          toast({ title: "স্টক সীমাবদ্ধ", description: `স্টকে মাত্র ${product.stock} টি আছে।`, type: "warning" });
-          return prev;
-        }
-        return prev.map(item => 
-          item.id === product.id && item.priceType === priceType ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      toast({ title: "যোগ হয়েছে", description: `${product.name} কার্টে যোগ হয়েছে`, type: "success" });
-      return [...prev, { 
-        ...product, 
-        quantity: 1, 
-        priceType, 
-        salePrice: priceType === "retail" ? product.retailPrice : product.wholesalePrice 
-      }];
-    });
-  };
-
-  const removeFromCart = (id: string, priceType: "retail" | "wholesale") => {
-    setCart(prev => prev.filter(item => !(item.id === id && item.priceType === priceType)));
-  };
-
-  const updateQuantity = (id: string, priceType: "retail" | "wholesale", delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id && item.priceType === priceType) {
-        const newQty = Math.max(1, item.quantity + delta);
-        if (newQty > item.stock) {
-          toast({ title: "স্টক শেষ", description: `স্টক লিমিট: ${item.stock}`, type: "warning" });
-          return item;
-        }
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }));
-  };
-
-  const calculateTotal = () => {
-    return cart.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
-  };
+  const selectedCustomer = customers.find(c => c.id.toString() === selectedCustomerId);
 
   const handleCheckout = async () => {
-    if (!customerName || !customerPhone) {
-      toast({ title: "তথ্য দিন", description: "কাস্টমারের নাম এবং মোবাইল দিন", type: "warning" });
-      return;
+    if (customerMode === "new") {
+      if (!customerName || !customerPhone) {
+        toast({ title: "তথ্য দিন", description: "কাস্টমারের নাম এবং মোবাইল দিন", type: "warning" });
+        return;
+      }
+    } else {
+      if (!selectedCustomerId) {
+        toast({ title: "তথ্য দিন", description: "কাস্টমার নির্বাচন করুন", type: "warning" });
+        return;
+      }
     }
 
     const totalAmount = calculateTotal();
@@ -124,9 +98,10 @@ const Sales = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerName,
-          customerPhone,
-          customerAddress,
+          customerId: customerMode === "existing" ? Number(selectedCustomerId) : null,
+          customerName: customerMode === "new" ? customerName : null,
+          customerPhone: customerMode === "new" ? customerPhone : null,
+          customerAddress: customerMode === "new" ? customerAddress : null,
           items: cart.map(({ id, name, quantity, salePrice, priceType, unit }) => ({ 
             id, name, quantity, salePrice, priceType, unit 
           })),
@@ -142,11 +117,8 @@ const Sales = () => {
       setCart([]);
       setIsCheckoutOpen(false);
       setIsCartMobileOpen(false);
-      setCustomerName("");
-      setCustomerPhone("");
-      setCustomerAddress("");
-      setPaidAmount("");
-      setDiscount("");
+      setCustomerName(""); setCustomerPhone(""); setCustomerAddress("");
+      setPaidAmount(""); setDiscount(""); setSelectedCustomerId("");
       navigate("/memos");
     } catch (e: any) {
       toast({ title: "ব্যর্থ হয়েছে", description: e.message || "বিক্রয় করা সম্ভব হয়নি", type: "error" });
@@ -395,29 +367,75 @@ const Sales = () => {
           </div>
           
           <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="flex p-1 bg-muted rounded-2xl mb-4">
+               <button 
+                className={cn("flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all", customerMode === 'new' ? "bg-primary text-white shadow-lg" : "text-muted-foreground")}
+                onClick={() => setCustomerMode('new')}
+               >
+                 নতুন কাস্টমার
+               </button>
+               <button 
+                className={cn("flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all", customerMode === 'existing' ? "bg-primary text-white shadow-lg" : "text-muted-foreground")}
+                onClick={() => setCustomerMode('existing')}
+               >
+                 পুরাতন কাস্টমার
+               </button>
+            </div>
+
             <div className="grid grid-cols-1 gap-6 text-left">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">কাস্টমারের নাম</Label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input className="pl-12 h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="নাম লিখুন" />
+              {customerMode === "existing" ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">কাস্টমার খুঁজুন</Label>
+                    <Select 
+                      className="h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm"
+                      value={selectedCustomerId}
+                      onChange={(e) => setSelectedCustomerId(e.target.value)}
+                    >
+                      <option value="">কাস্টমার সিলেক্ট করুন...</option>
+                      {customers.map(c => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                      ))}
+                    </Select>
+                  </div>
+                  {selectedCustomer && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase text-muted-foreground">বর্তমান পাওনা:</span>
+                        <span className={cn("font-black", selectedCustomer.totalDue > 0 ? "text-danger" : "text-green-600")}>
+                          {formatCurrency(selectedCustomer.totalDue)}
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">মোবাইল নম্বর</Label>
-                <div className="relative group">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input className="pl-12 h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="017XXXXXXXX" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">ঠিকানা (ঐচ্ছিক)</Label>
-                <div className="relative group">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input className="pl-12 h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} placeholder="ঠিকানা লিখুন" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">কাস্টমারের নাম</Label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input className="pl-12 h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="নাম লিখুন" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">মোবাইল নম্বর</Label>
+                    <div className="relative group">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input className="pl-12 h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="017XXXXXXXX" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">ঠিকানা (ঐচ্ছিক)</Label>
+                    <div className="relative group">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input className="pl-12 h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} placeholder="ঠিকানা লিখুন" />
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              <div className="grid grid-cols-2 gap-6 pt-4 border-t border-primary/5">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">ডিসকাউন্ট</Label>
                   <Input className="h-14 rounded-2xl bg-background/50 border-accent/20 font-bold focus:ring-accent shadow-sm" type="number" value={discount} onChange={e => setDiscount(e.target.value)} placeholder="0.00" />
