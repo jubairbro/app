@@ -263,6 +263,12 @@ def startup_seeding():
         if "createdAt" not in s_columns:
             cursor.execute("ALTER TABLE sales ADD COLUMN createdAt DATETIME")
             
+        # --- Migration for 'sale_items' table ---
+        cursor.execute("PRAGMA table_info(sale_items)")
+        si_columns = [column[1] for column in cursor.fetchall()]
+        if "purchasePriceAtSale" not in si_columns:
+            cursor.execute("ALTER TABLE sale_items ADD COLUMN purchasePriceAtSale FLOAT DEFAULT 0.0")
+            
         conn.commit()
         conn.close()
     except Exception as e:

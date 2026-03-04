@@ -1,58 +1,58 @@
-# Saikat Machinery Manager
+# Saikat Machinery Enterprise ERP (v3.0)
 
-A secure inventory and billing management system for Messrs. Saikat Machinery.
+মেসার্স সৈকত মেশিনারি-র জন্য একটি শক্তিশালী এবং আধুনিক ইনভেন্টরি ও সেলস ম্যানেজমেন্ট সিস্টেম। এটি পাইকারি ও খুচরা ব্যবসার হিসাব রাখার জন্য বিশেষভাবে তৈরি করা হয়েছে।
 
-## Features
+## প্রধান বৈশিষ্ট্যসমূহ (Features)
 
-- **Inventory Management:** Add, edit, delete products. Low stock alerts.
-- **Sales (POS):** Search products, add to cart, checkout with customer details.
-- **Memos:** View and print invoices.
-- **Due Book:** Track customer dues and record payments.
-- **Dashboard:** Overview of sales, dues, and low stock items.
-- **Authentication:** Secure login for admin.
+- **ড্যাশবোর্ড (Dashboard):** ব্যবসার বর্তমান অবস্থা, মোট বিক্রয়, বাকি এবং লো-স্টক পণ্যের সংক্ষিপ্ত রূপরেখা।
+- **ইনভেন্টরি ম্যানেজমেন্ট (Inventory):** পণ্যের স্টক যোগ, এডিট, ডিলিট এবং ক্যাটাগরি অনুযায়ী ম্যানেজ করা।
+- **সেলস (POS System):** কাস্টমার ম্যানেজমেন্টসহ উন্নত চেকআউট সিস্টেম। বিক্রয় শেষে সাথে সাথে প্রফেশনাল বাংলা মেমো জেনারেশন।
+- **মেমো তালিকা (Memos):** সকল পুরাতন বিক্রয়ের রেকর্ড দেখা, পুনরায় প্রিন্ট করা এবং PDF ডাউনলোড।
+- **বাকি খাতা (Due Book):** কাস্টমারদের দেনা-পাওনার নিখুঁত হিসাব ও পেমেন্ট হিস্ট্রি।
+- **খরচের খাতা (Expenses):** ব্যবসার দৈনিক খরচের হিসাব রাখা।
+- **সাপ্লায়ার ম্যানেজমেন্ট (Suppliers):** সাপ্লায়ারদের ডাটা এবং পেমেন্ট ব্যালেন্স ট্র্যাক করা।
+- **স্টাফ ম্যানেজমেন্ট (Staff):** মাল্টিপল স্টাফ অ্যাকাউন্ট এবং অ্যাডমিন এক্সেস কন্ট্রোল।
+- **স্টক হিস্ট্রি (Stock History):** পণ্যের স্টক মুভমেন্টের বিস্তারিত লগ (Audit Log)।
+- **রিপোর্ট ও লাভ (Reports):** বিক্রয় প্রবাহ, টপ প্রোডাক্টস এবং নিট লাভ-ক্ষতির এনালাইটিক্স।
 
-## Setup Instructions
+## প্রযুক্তিগত বিবরণ (Tech Stack)
 
-### 1. Firebase Setup
+- **Frontend:** React (TypeScript), Vite, Tailwind CSS, Lucide React, Framer Motion.
+- **Backend:** Python, FastAPI, SQLAlchemy.
+- **Database:** SQLite (Relational Database).
+- **PDF Engine:** jsPDF & html2canvas.
 
-1.  Go to [Firebase Console](https://console.firebase.google.com/).
-2.  Create a new project.
-3.  Enable **Authentication** and set up **Email/Password** provider.
-4.  Create an admin user manually in the Authentication tab (since there is no public sign-up).
-5.  Enable **Firestore Database** in test mode or production mode.
-6.  Go to Project Settings -> General -> Your apps -> Web app.
-7.  Copy the Firebase configuration keys.
+## সেটআপ ইনস্ট্রাকশন (Setup Instructions)
 
-### 2. Environment Variables
+এই প্রজেক্টটি লোকাল এনভায়রনমেন্টে চালানোর জন্য নিচের ধাপগুলো অনুসরণ করুন:
 
-Create a `.env` file in the root directory and add your Firebase keys:
+### ১. ব্যাকএন্ড সেটআপ
+```bash
+# পাইথন ডিপেন্ডেন্সি ইনস্টল করুন
+pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] pydantic-settings python-multipart
 
-```env
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
+# ব্যাকএন্ড সার্ভার চালু করুন
+python3 main.py
 ```
 
-### 3. Firestore Rules
+### ২. ফ্রন্টএন্ড সেটআপ
+```bash
+# নোড মডিউল ইনস্টল করুন
+npm install
 
-Copy the contents of `firestore.rules` to your Firestore Rules tab in the Firebase Console to secure your database.
+# ডেভেলপমেন্ট মোডে রান করুন
+npm run dev
 
-## Deployment
+# প্রোডাকশন বিল্ড তৈরি করুন
+npm run build
+```
 
-To deploy to Vercel:
+## এনভায়রনমেন্ট কনফিগারেশন
+প্রজেক্টটি চালানোর জন্য ডিফল্টভাবে `main.py` এ ডাটাবেজ এবং সিক্রেট কি সেট করা আছে। আপনি চাইলে `main.py` এর কনফিগারেশন সেকশন থেকে `SECRET_KEY` পরিবর্তন করতে পারেন।
 
-1.  Push the code to GitHub.
-2.  Import the project in Vercel.
-3.  Add the environment variables in Vercel project settings.
-4.  Deploy.
+## অ্যাডমিন এক্সেস (Default Admin)
+- **ইমেইল:** `admin@saikat.com`
+- **পাসওয়ার্ড:** `@Admin123`
 
-## Usage
-
-1.  Login with the admin credentials created in Firebase.
-2.  Go to **Inventory** to add products.
-3.  Go to **Sales** to create new sales.
-4.  Go to **Memos** to print invoices.
-5.  Go to **Due Book** to manage customer payments.
+---
+*Developed by Gemini CLI for Saikat Machinery Enterprise.*
