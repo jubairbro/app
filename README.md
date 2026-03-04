@@ -54,5 +54,44 @@ npm run build
 - **ইমেইল:** `admin@saikat.com`
 - **পাসওয়ার্ড:** `@Admin123`
 
+## শেয়ারড হোস্টিং (cPanel/DirectAdmin) সেটআপ গাইড
+
+এই প্রজেক্টটি শেয়ারড হোস্টিং-এ (যেমন: cPanel বা DirectAdmin) সফলভাবে হোস্ট করার জন্য নিচের ধাপগুলো অনুসরণ করুন:
+
+### ১. Python App সেটআপ (cPanel)
+- আপনার cPanel ড্যাশবোর্ড থেকে **'Setup Python App'** অপশনে যান।
+- **'Create Application'** বাটনে ক্লিক করুন।
+- **Python Version:** ৩.১০ বা তার বেশি নির্বাচন করুন।
+- **Application root:** আপনার প্রজেক্ট ফোল্ডারের নাম দিন (যেমন: `app`)।
+- **Application URL:** আপনার সাবডোমেইন বা ডোমেইন নির্বাচন করুন।
+- **Application startup file:** `main.py` দিন।
+- **Entry point:** `app` (FastAPI instance)।
+
+### ২. ডিপেন্ডেন্সি ইনস্টল করা
+- Python App সেভ করার পর, স্ক্রিনের উপরে দেওয়া কমান্ডটি কপি করুন (যেমন: `source /home/user/virtualenv/app/3.10/bin/activate && cd /home/user/app`)।
+- আপনার কম্পিউটারের টার্মিনাল বা cPanel-এর **'Terminal'** অপশন থেকে ওই কমান্ডটি রান করুন।
+- এরপর নিচের কমান্ডটি দিয়ে সব লাইব্রেরি ইনস্টল করুন:
+  ```bash
+  pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] pydantic-settings python-multipart jinja2
+  ```
+
+### ৩. ফ্রন্টএন্ড বিল্ড আপলোড করা
+- আপনার লোকাল কম্পিউটারে `npm run build` কমান্ডটি রান করুন।
+- এরপর তৈরি হওয়া `dist` ফোল্ডারের ভেতরের সব ফাইল হোস্টিং-এর প্রজেক্ট ফোল্ডারে (যেখানে `main.py` আছে) আপলোড করুন।
+
+### ৪. ডাটাবেজ ও ফোল্ডার পারমিশন
+- প্রজেক্ট ডিরেক্টরিতে `data` এবং `uploads` নামে দুটি ফোল্ডার তৈরি করুন।
+- ফোল্ডার দুটির পারমিশন `755` বা প্রয়োজনে `777` করে দিন যাতে SQLite ডাটাবেজ এবং ইমেজ আপলোড কাজ করে।
+
+### ৫. .htaccess কনফিগারেশন (Apache-এর জন্য)
+যদি আপনার হোস্টিং Apache ব্যবহার করে, তবে `public_html` বা প্রজেক্টের রুট ফোল্ডারে একটি `.htaccess` ফাইল তৈরি করে নিচের কোডটি দিন (পোর্ট ৩০০০ বা আপনার পাইথন অ্যাপের পোর্ট অনুযায়ী):
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+```
+
+*দ্রষ্টব্য: শেয়ারড হোস্টিং-এ Python App রান করতে সমস্যা হলে আপনার হোস্টিং প্রোভাইডারের সাথে যোগাযোগ করুন এবং নিশ্চিত করুন যে তারা WSGI/ASGI সাপোর্ট করে।*
+
 ---
 *Developed by Gemini CLI for Saikat Machinery Enterprise.*
