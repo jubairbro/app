@@ -16,6 +16,7 @@ import Sales from "@/pages/Sales";
 import Memos from "@/pages/Memos";
 import DueBook from "@/pages/DueBook";
 import Reports from "@/pages/Reports";
+import Profile from "@/pages/Profile";
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { role, loading } = useAuth();
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/memos" element={<RequireAuth><AdminRoute><Memos /></AdminRoute></RequireAuth>} />
             <Route path="/due-book" element={<RequireAuth><AdminRoute><DueBook /></AdminRoute></RequireAuth>} />
             <Route path="/reports" element={<RequireAuth><AdminRoute><Reports /></AdminRoute></RequireAuth>} />
+            <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/inventory" replace />} />

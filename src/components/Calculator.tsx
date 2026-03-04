@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Delete } from "lucide-react";
+import { Delete, X, Hash, Equal, Minus, Plus, Divide, Percent } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 const Calculator = () => {
   const [display, setDisplay] = useState("0");
@@ -17,10 +18,11 @@ const Calculator = () => {
   }, [display, isNewNumber]);
 
   const handleOperator = useCallback((op: string) => {
-    if (!isNewNumber && equation) {
+    if (equation && !isNewNumber) {
       try {
         // eslint-disable-next-line no-eval
-        const result = eval(equation + display);
+        const cleanEq = (equation + display).replace('×', '*').replace('÷', '/');
+        const result = eval(cleanEq);
         setEquation(result + " " + op + " ");
         setDisplay(String(result));
       } catch (e) {
@@ -35,8 +37,9 @@ const Calculator = () => {
   const calculate = useCallback(() => {
     if (!equation) return;
     try {
+      const cleanEq = (equation + display).replace('×', '*').replace('÷', '/');
       // eslint-disable-next-line no-eval
-      const result = eval(equation + display);
+      const result = eval(cleanEq);
       setDisplay(String(result));
       setEquation("");
       setIsNewNumber(true);
@@ -58,16 +61,6 @@ const Calculator = () => {
     setDisplay(display.length > 1 ? display.slice(0, -1) : "0");
   }, [display, isNewNumber]);
 
-  const handlePercentage = useCallback(() => {
-    try {
-      const val = parseFloat(display);
-      setDisplay(String(val / 100));
-      setIsNewNumber(true);
-    } catch (e) {
-      setDisplay("Error");
-    }
-  }, [display]);
-
   // Keyboard support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,9 +68,18 @@ const Calculator = () => {
       if (/[0-9.]/.test(key)) {
         e.preventDefault();
         handleNumber(key);
-      } else if (['+', '-', '*', '/'].includes(key)) {
+      } else if (key === '+') {
         e.preventDefault();
-        handleOperator(key);
+        handleOperator("+");
+      } else if (key === '-') {
+        e.preventDefault();
+        handleOperator("-");
+      } else if (key === '*') {
+        e.preventDefault();
+        handleOperator("×");
+      } else if (key === '/') {
+        e.preventDefault();
+        handleOperator("÷");
       } else if (key === 'Enter' || key === '=') {
         e.preventDefault();
         calculate();
@@ -87,51 +89,53 @@ const Calculator = () => {
       } else if (key === 'Escape') {
         e.preventDefault();
         clear();
-      } else if (key === '%') {
-        e.preventDefault();
-        handlePercentage();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleNumber, handleOperator, calculate, handleBackspace, clear, handlePercentage]);
+  }, [handleNumber, handleOperator, calculate, handleBackspace, clear]);
 
   return (
-    <div className="w-72 bg-card p-5 rounded-2xl shadow-2xl border border-border/50">
-      <div className="mb-6 text-right bg-muted/30 p-4 rounded-xl border border-border/50">
-        <div className="text-sm text-muted-foreground h-5 font-mono tracking-wider overflow-hidden text-ellipsis whitespace-nowrap">
-          {equation.replace('*', '×').replace('/', '÷')}
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="w-80 bg-card/80 backdrop-blur-3xl p-6 rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border border-white/10"
+    >
+      <div className="mb-6 text-right bg-black/20 p-6 rounded-3xl border border-white/5 shadow-inner">
+        <div className="text-[10px] font-black text-muted-foreground h-4 uppercase tracking-widest mb-1 overflow-hidden">
+          {equation}
         </div>
-        <div className="text-4xl font-bold truncate mt-1 font-mono tracking-tight">
+        <div className="text-4xl font-black text-primary truncate tracking-tighter">
           {display}
         </div>
       </div>
+
       <div className="grid grid-cols-4 gap-3">
-        <Button variant="destructive" onClick={clear} className="col-span-2 font-bold text-lg h-12">AC</Button>
-        <Button variant="secondary" onClick={handlePercentage} className="font-bold text-lg h-12">%</Button>
-        <Button variant="secondary" onClick={() => handleOperator("/")} className="font-bold text-xl h-12">÷</Button>
+        <Button variant="destructive" onClick={clear} className="h-14 rounded-2xl font-black text-xs uppercase shadow-lg">AC</Button>
+        <Button variant="secondary" onClick={handleBackspace} className="h-14 rounded-2xl shadow-lg"><Delete className="h-5 w-5" /></Button>
+        <Button variant="secondary" onClick={() => handleOperator("÷")} className="h-14 rounded-2xl shadow-lg font-black text-lg"><Divide className="h-5 w-5" /></Button>
+        <Button variant="secondary" onClick={() => handleOperator("×")} className="h-14 rounded-2xl shadow-lg font-black text-lg"><X className="h-5 w-5" /></Button>
         
-        <Button variant="outline" onClick={() => handleNumber("7")} className="text-xl h-12">7</Button>
-        <Button variant="outline" onClick={() => handleNumber("8")} className="text-xl h-12">8</Button>
-        <Button variant="outline" onClick={() => handleNumber("9")} className="text-xl h-12">9</Button>
-        <Button variant="secondary" onClick={() => handleOperator("*")} className="font-bold text-xl h-12">×</Button>
+        {[7, 8, 9].map(n => (
+          <Button key={n} variant="outline" onClick={() => handleNumber(String(n))} className="h-14 rounded-2xl text-lg font-black bg-white/5 border-white/5 hover:bg-primary hover:text-white transition-all shadow-md">{n}</Button>
+        ))}
+        <Button variant="secondary" onClick={() => handleOperator("-")} className="h-14 rounded-2xl shadow-lg font-black text-lg"><Minus className="h-5 w-5" /></Button>
         
-        <Button variant="outline" onClick={() => handleNumber("4")} className="text-xl h-12">4</Button>
-        <Button variant="outline" onClick={() => handleNumber("5")} className="text-xl h-12">5</Button>
-        <Button variant="outline" onClick={() => handleNumber("6")} className="text-xl h-12">6</Button>
-        <Button variant="secondary" onClick={() => handleOperator("-")} className="font-bold text-xl h-12">-</Button>
+        {[4, 5, 6].map(n => (
+          <Button key={n} variant="outline" onClick={() => handleNumber(String(n))} className="h-14 rounded-2xl text-lg font-black bg-white/5 border-white/5 hover:bg-primary hover:text-white transition-all shadow-md">{n}</Button>
+        ))}
+        <Button variant="secondary" onClick={() => handleOperator("+")} className="h-14 rounded-2xl shadow-lg font-black text-lg"><Plus className="h-5 w-5" /></Button>
         
-        <Button variant="outline" onClick={() => handleNumber("1")} className="text-xl h-12">1</Button>
-        <Button variant="outline" onClick={() => handleNumber("2")} className="text-xl h-12">2</Button>
-        <Button variant="outline" onClick={() => handleNumber("3")} className="text-xl h-12">3</Button>
-        <Button variant="secondary" onClick={() => handleOperator("+")} className="font-bold text-xl h-12">+</Button>
+        {[1, 2, 3].map(n => (
+          <Button key={n} variant="outline" onClick={() => handleNumber(String(n))} className="h-14 rounded-2xl text-lg font-black bg-white/5 border-white/5 hover:bg-primary hover:text-white transition-all shadow-md">{n}</Button>
+        ))}
+        <Button onClick={calculate} className="h-32 row-span-2 rounded-2xl bg-accent text-accent-foreground font-black text-2xl shadow-xl shadow-accent/20 border-none"><Equal className="h-8 w-8" /></Button>
         
-        <Button variant="outline" onClick={() => handleNumber("0")} className="col-span-2 text-xl h-12">0</Button>
-        <Button variant="outline" onClick={() => handleNumber(".")} className="text-xl font-bold h-12">.</Button>
-        <Button onClick={calculate} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xl h-12">=</Button>
+        <Button variant="outline" onClick={() => handleNumber("0")} className="col-span-2 h-14 rounded-2xl text-lg font-black bg-white/5 border-white/5 hover:bg-primary hover:text-white transition-all shadow-md">0</Button>
+        <Button variant="outline" onClick={() => handleNumber(".")} className="h-14 rounded-2xl text-xl font-black bg-white/5 border-white/5 shadow-md">.</Button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

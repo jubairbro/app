@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, ShoppingCart, Trash2, Image as ImageIcon, Plus } from "lucide-react";
+import { Search, ShoppingCart, Trash2, Image as ImageIcon, Plus, ArrowRight, X, User, Phone, MapPin } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { Select } from "@/components/ui/select-native";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchApi } from "@/lib/api";
+import { motion, AnimatePresence } from "motion/react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/toast";
 
 interface Product {
   id: string;
@@ -34,13 +36,17 @@ const Sales = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isCartMobileOpen, setIsCartMobileOpen] = useState(false);
+  
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [paidAmount, setPaidAmount] = useState("");
   const [discount, setDiscount] = useState("");
+  
   const navigate = useNavigate();
   const { role } = useAuth();
+  const { toast } = useToast();
   const isAdmin = role === "admin";
 
   useEffect(() => {
@@ -49,20 +55,25 @@ const Sales = () => {
         const data = await fetchApi('/api/products');
         setProducts(data);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        toast({ title: "ভুল হয়েছে", description: "পণ্য লোড করা যায়নি", type: "error" });
       }
     };
     fetchProducts();
-  }, []);
+  }, [toast]);
 
   const addToCart = (product: Product, priceType: "retail" | "wholesale" = "retail") => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id && item.priceType === priceType);
       if (existing) {
+        if (existing.quantity + 1 > product.stock) {
+          toast({ title: "স্টক সীমাবদ্ধ", description: `স্টকে মাত্র ${product.stock} টি আছে।`, type: "warning" });
+          return prev;
+        }
         return prev.map(item => 
           item.id === product.id && item.priceType === priceType ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
+      toast({ title: "যোগ হয়েছে", description: `${product.name} কার্টে যোগ হয়েছে`, type: "success" });
       return [...prev, { 
         ...product, 
         quantity: 1, 
@@ -81,7 +92,7 @@ const Sales = () => {
       if (item.id === id && item.priceType === priceType) {
         const newQty = Math.max(1, item.quantity + delta);
         if (newQty > item.stock) {
-          alert(`স্টক এ পর্যাপ্ত পণ্য নেই! বর্তমান স্টক: ${item.stock}`);
+          toast({ title: "স্টক শেষ", description: `স্টক লিমিট: ${item.stock}`, type: "warning" });
           return item;
         }
         return { ...item, quantity: newQty };
@@ -90,23 +101,13 @@ const Sales = () => {
     }));
   };
 
-  const updatePriceType = (id: string, type: "retail" | "wholesale") => {
-    setCart(prev => prev.map(item => 
-      item.id === id ? { 
-        ...item, 
-        priceType: type, 
-        salePrice: type === "retail" ? item.retailPrice : item.wholesalePrice 
-      } : item
-    ));
-  };
-
   const calculateTotal = () => {
     return cart.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
   };
 
   const handleCheckout = async () => {
     if (!customerName || !customerPhone) {
-      alert("কাস্টমারের নাম এবং মোবাইল নম্বর দিন!");
+      toast({ title: "তথ্য দিন", description: "কাস্টমারের নাম এবং মোবাইল দিন", type: "warning" });
       return;
     }
 
@@ -135,9 +136,10 @@ const Sales = () => {
         }),
       });
 
-      alert("বিক্রয় সফল হয়েছে!");
+      toast({ title: "সফল", description: "বিক্রয় সম্পন্ন হয়েছে", type: "success" });
       setCart([]);
       setIsCheckoutOpen(false);
+      setIsCartMobileOpen(false);
       setCustomerName("");
       setCustomerPhone("");
       setCustomerAddress("");
@@ -145,192 +147,320 @@ const Sales = () => {
       setDiscount("");
       navigate("/memos");
     } catch (e: any) {
-      console.error("Transaction failed: ", e);
-      alert(e.message || "বিক্রয় ব্যর্থ হয়েছে! স্টক চেক করুন বা আবার চেষ্টা করুন।");
+      toast({ title: "ব্যর্থ হয়েছে", description: e.message || "বিক্রয় করা সম্ভব হয়নি", type: "error" });
     }
   };
 
   const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) && p.stock > 0
+    (p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+     p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     p.id.toString().includes(searchTerm)) && 
+    p.stock > 0
+  );
+
+  const cartContent = (
+    <div className="flex flex-col h-full bg-card/60 backdrop-blur-xl border border-primary/5 shadow-2xl overflow-hidden rounded-[2.5rem]">
+      <div className="p-6 border-b bg-primary/5 flex items-center justify-between">
+        <h2 className="font-black flex items-center gap-3 text-primary text-xl">
+          <div className="p-2 bg-primary rounded-xl">
+            <ShoppingCart className="h-5 w-5 text-accent" />
+          </div>
+          কার্ট ({cart.length})
+        </h2>
+        <Button variant="ghost" size="sm" onClick={() => setCart([])} className="text-danger font-black text-[10px] uppercase tracking-widest hover:bg-danger/10">মুছে ফেলুন</Button>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+        <AnimatePresence initial={false}>
+          {cart.map((item) => (
+            <motion.div 
+              key={`${item.id}-${item.priceType}`} 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, x: -50 }}
+              className="flex flex-col gap-3 border-b border-primary/5 pb-4 last:border-0"
+            >
+              <div className="flex justify-between items-start">
+                <div className="text-left">
+                  <h4 className="font-bold text-sm leading-tight text-primary">{item.name}</h4>
+                  <span className={cn(
+                    "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mt-1 inline-block border",
+                    item.priceType === 'retail' ? 'bg-blue-500/10 text-blue-600 border-blue-500/10' : 'bg-amber-500/10 text-amber-600 border-amber-500/10'
+                  )}>
+                    {item.priceType === 'retail' ? 'খুচরা' : 'পাইকারি'}
+                  </span>
+                </div>
+                <button onClick={() => removeFromCart(item.id, item.priceType)} className="close-button">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+              
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center bg-muted/50 rounded-xl p-1 border border-primary/5 shadow-inner">
+                  <button onClick={() => updateQuantity(item.id, item.priceType, -1)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-card transition-all font-black text-primary">-</button>
+                  <span className="w-10 text-center text-sm font-black text-primary">{item.quantity}</span>
+                  <button onClick={() => updateQuantity(item.id, item.priceType, 1)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-card transition-all font-black text-primary">+</button>
+                </div>
+                
+                <div className="text-right">
+                  <div className="text-[10px] text-muted-foreground font-bold">{formatCurrency(item.salePrice)} × {item.quantity}</div>
+                  <span className="font-black text-primary">{formatCurrency(item.salePrice * item.quantity)}</span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        {cart.length === 0 && (
+          <div className="text-center py-20 flex flex-col items-center gap-4 opacity-30 font-black">
+            <ShoppingCart className="h-16 w-16" />
+            <p className="uppercase tracking-widest text-xs">কার্ট খালি</p>
+          </div>
+        )}
+      </div>
+
+      <div className="p-8 border-t bg-primary/5 space-y-6">
+        <div className="flex justify-between items-end">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">সর্বমোট বিল</span>
+          <span className="text-3xl font-black text-primary tracking-tighter">{formatCurrency(calculateTotal())}</span>
+        </div>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button 
+            className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black text-lg shadow-xl shadow-primary/20 hover:bg-primary/90 flex items-center justify-center gap-3 group" 
+            disabled={cart.length === 0} 
+            onClick={() => setIsCheckoutOpen(true)}
+          >
+            বিক্রি সম্পন্ন করুন
+            <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </motion.div>
+      </div>
+    </div>
   );
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] gap-4">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-8rem)] gap-6 relative">
       {/* Product List */}
-      <div className="flex-1 flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <Input 
-            placeholder="পণ্য খুঁজুন..." 
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="flex-1"
-          />
-          <Button variant="outline"><Search className="h-4 w-4" /></Button>
+      <div className="flex-1 flex flex-col gap-6 overflow-hidden">
+        <div className="flex items-center gap-3 bg-card/40 backdrop-blur-md p-4 rounded-3xl border border-primary/5 shadow-lg">
+          <div className="relative flex-1 group text-left">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input 
+              placeholder="পণ্য বা ক্যাটাগরি দিয়ে খুঁজুন..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="pl-12 h-12 rounded-2xl bg-background/50 border-none focus:ring-primary shadow-inner text-base"
+            />
+          </div>
           {isAdmin && (
-            <Button variant="secondary" asChild>
+            <Button variant="secondary" asChild className="h-12 rounded-2xl hidden sm:flex">
               <Link to="/inventory">
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-5 w-5" />
                 নতুন পণ্য
               </Link>
             </Button>
           )}
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto pr-2">
-          {filteredProducts.map(product => (
-            <Card key={product.id} className="overflow-hidden flex flex-col">
-              <div className="h-32 w-full bg-muted flex items-center justify-center">
-                {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                )}
-              </div>
-              <CardContent className="p-4 flex flex-col justify-between flex-1">
-                <div>
-                  <h3 className="font-bold text-lg truncate" title={product.name}>{product.name}</h3>
-                  <p className="text-sm text-muted-foreground">{product.category}</p>
-                </div>
-                <div className="mt-2 space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">স্টক:</span>
-                    <span className="font-medium">{product.stock} {product.unit}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full flex flex-col items-center py-6 h-auto"
-                      onClick={() => addToCart(product, "retail")}
-                    >
-                      <span className="text-xs font-normal">খুচরা</span>
-                      <span className="font-bold">{formatCurrency(product.retailPrice)}</span>
-                    </Button>
-                    {isAdmin && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full flex flex-col items-center py-6 h-auto border-primary/20 hover:border-primary/50"
-                        onClick={() => addToCart(product, "wholesale")}
-                      >
-                        <span className="text-xs font-normal">পাইকারি</span>
-                        <span className="font-bold">{formatCurrency(product.wholesalePrice)}</span>
-                      </Button>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 overflow-y-auto pr-2 custom-scrollbar pb-24 lg:pb-10">
+          <AnimatePresence>
+            {filteredProducts.map(product => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ y: -5 }}
+                className="h-full"
+              >
+                <Card className="overflow-hidden h-full flex flex-col group hover:shadow-2xl transition-all duration-300 border-none bg-card/40 backdrop-blur-sm rounded-[2rem] border border-primary/5">
+                  <div className="h-32 w-full bg-muted flex items-center justify-center overflow-hidden relative border-b border-primary/5">
+                    {product.imageUrl ? (
+                      <img 
+                        src={product.imageUrl} 
+                        alt={product.name} 
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                        referrerPolicy="no-referrer" 
+                      />
+                    ) : (
+                      <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
                     )}
+                    <div className="absolute top-2 right-2 px-2.5 py-1 bg-primary/80 backdrop-blur-md text-white text-[9px] font-black rounded-full uppercase tracking-widest border border-white/5 shadow-lg">
+                      {product.category}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <CardContent className="p-4 sm:p-5 flex flex-col justify-between flex-1">
+                    <div className="text-left">
+                      <h3 className="font-bold text-sm sm:text-base line-clamp-1 group-hover:text-primary transition-colors text-primary" title={product.name}>{product.name}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-black uppercase tracking-tighter border border-accent/10">
+                          {product.unit}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      <div className="flex justify-between items-center bg-muted/30 px-3 py-1.5 rounded-xl border border-primary/5 shadow-inner">
+                        <span className="text-[9px] font-black uppercase text-muted-foreground">মজুদ</span>
+                        <span className={cn(
+                          "font-black text-xs",
+                          product.stock < 10 ? "text-danger animate-pulse" : "text-primary"
+                        )}>{product.stock} {product.unit}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full flex flex-col items-center py-4 sm:py-5 h-auto rounded-2xl hover:bg-primary hover:text-white border-primary/10 transition-all shadow-sm"
+                          onClick={() => addToCart(product, "retail")}
+                        >
+                          <span className="text-[8px] font-black uppercase opacity-60">খুচরা</span>
+                          <span className="font-black text-[11px] sm:text-xs text-primary group-hover:text-white">{formatCurrency(product.retailPrice)}</span>
+                        </Button>
+                        {isAdmin && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full flex flex-col items-center py-4 sm:py-5 h-auto rounded-2xl border-accent/20 hover:bg-accent hover:text-accent-foreground transition-all shadow-sm group"
+                            onClick={() => addToCart(product, "wholesale")}
+                          >
+                            <span className="text-[8px] font-black uppercase opacity-60 group-hover:text-accent-foreground">পাইকারি</span>
+                            <span className="font-black text-[11px] sm:text-xs text-accent group-hover:text-accent-foreground">{formatCurrency(product.wholesalePrice)}</span>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Cart */}
-      <div className="w-96 flex flex-col bg-card border rounded-lg shadow-sm">
-        <div className="p-4 border-b bg-muted/20">
-          <h2 className="font-bold flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" />
-            কার্ট ({cart.length})
-          </h2>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {cart.map((item, index) => (
-            <div key={`${item.id}-${item.priceType}-${index}`} className="flex flex-col gap-2 border-b pb-2 last:border-0">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-medium">{item.name}</h4>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                    {item.priceType === 'retail' ? 'খুচরা' : 'পাইকারি'}
-                  </span>
-                </div>
-                <button onClick={() => removeFromCart(item.id, item.priceType)} className="text-danger hover:bg-danger/10 p-1 rounded">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center border rounded-md">
-                  <button onClick={() => updateQuantity(item.id, item.priceType, -1)} className="px-2 py-1 hover:bg-muted">-</button>
-                  <span className="px-2 text-sm font-medium">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, item.priceType, 1)} className="px-2 py-1 hover:bg-muted">+</button>
-                </div>
-                
-                <span className="font-bold text-sm">{formatCurrency(item.salePrice * item.quantity)}</span>
-              </div>
-            </div>
-          ))}
-          {cart.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">
-              কার্ট খালি
-            </div>
-          )}
-        </div>
-
-        <div className="p-4 border-t bg-muted/20 space-y-4">
-          <div className="flex justify-between items-center text-lg font-bold">
-            <span>মোট:</span>
-            <span>{formatCurrency(calculateTotal())}</span>
-          </div>
-          <Button className="w-full" size="lg" disabled={cart.length === 0} onClick={() => setIsCheckoutOpen(true)}>
-            বিক্রি করুন
+      {/* Floating Mobile Cart Trigger */}
+      <div className="fixed bottom-24 right-6 lg:hidden z-40">
+        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+          <Button 
+            className="h-16 w-16 rounded-full bg-primary text-white shadow-2xl border-4 border-white/10 relative"
+            onClick={() => setIsCartMobileOpen(true)}
+          >
+            <ShoppingCart className="h-6 w-6 text-accent" />
+            {cart.length > 0 && (
+              <span className="absolute -top-1 -right-1 h-6 w-6 bg-danger text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-bounce">
+                {cart.length}
+              </span>
+            )}
           </Button>
-        </div>
+        </motion.div>
       </div>
+
+      {/* Desktop Cart */}
+      <div className="hidden lg:flex w-[400px] flex-col">
+        {cartContent}
+      </div>
+
+      {/* Mobile Cart Overlay */}
+      <AnimatePresence>
+        {isCartMobileOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCartMobileOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute bottom-0 inset-x-0 h-[85vh] bg-card rounded-t-[3rem] shadow-2xl overflow-hidden flex flex-col"
+            >
+              <div className="h-1.5 w-12 bg-muted rounded-full mx-auto mt-4 mb-2" />
+              <div className="flex-1 overflow-hidden p-2">
+                {cartContent}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>চেকআউট</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">নাম</Label>
-              <Input className="col-span-3" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="কাস্টমারের নাম" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">মোবাইল</Label>
-              <Input className="col-span-3" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="017..." />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">ঠিকানা</Label>
-              <Input className="col-span-3" value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} placeholder="ঠিকানা (ঐচ্ছিক)" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">ডিসকাউন্ট</Label>
-              <Input className="col-span-3" type="number" value={discount} onChange={e => setDiscount(e.target.value)} placeholder="0" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">পরিশোধ</Label>
-              <Input className="col-span-3" type="number" value={paidAmount} onChange={e => setPaidAmount(e.target.value)} placeholder="কত টাকা দিয়েছে?" />
+        <DialogContent className="sm:max-w-[500px] rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card/80 backdrop-blur-2xl">
+          <div className="bg-primary p-8 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-3xl font-black tracking-tight">চেকআউট পেমেন্ট</DialogTitle>
+            </DialogHeader>
+          </div>
+          
+          <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="grid grid-cols-1 gap-6 text-left">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">কাস্টমারের নাম</Label>
+                <div className="relative group">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input className="pl-12 h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="নাম লিখুন" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">মোবাইল নম্বর</Label>
+                <div className="relative group">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input className="pl-12 h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="017XXXXXXXX" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">ঠিকানা (ঐচ্ছিক)</Label>
+                <div className="relative group">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input className="pl-12 h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm" value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} placeholder="ঠিকানা লিখুন" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">ডিসকাউন্ট</Label>
+                  <Input className="h-14 rounded-2xl bg-background/50 border-accent/20 font-bold focus:ring-accent shadow-sm" type="number" value={discount} onChange={e => setDiscount(e.target.value)} placeholder="0.00" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2 text-primary">জমা / পেমেন্ট</Label>
+                  <Input className="h-14 rounded-2xl bg-primary/5 border-primary/20 font-black focus:ring-primary text-primary shadow-inner" type="number" value={paidAmount} onChange={e => setPaidAmount(e.target.value)} placeholder="৳ 0.00" />
+                </div>
+              </div>
             </div>
             
-            <div className="border-t pt-4 mt-2 space-y-2">
-              <div className="flex justify-between">
-                <span>মোট বিল:</span>
-                <span>{formatCurrency(calculateTotal())}</span>
+            <div className="bg-primary/5 rounded-[2.5rem] p-8 space-y-4 border border-primary/5 shadow-inner">
+              <div className="flex justify-between text-xs font-bold">
+                <span className="text-muted-foreground uppercase tracking-widest text-[9px]">মোট বিল:</span>
+                <span className="text-primary">{formatCurrency(calculateTotal())}</span>
               </div>
-              <div className="flex justify-between text-danger">
-                <span>ডিসকাউন্ট:</span>
-                <span>- {formatCurrency(Number(discount) || 0)}</span>
+              <div className="flex justify-between text-xs font-bold text-danger">
+                <span className="uppercase tracking-widest text-[9px]">ডিসকাউন্ট (-):</span>
+                <span>{formatCurrency(Number(discount) || 0)}</span>
               </div>
-              <div className="flex justify-between font-bold text-lg">
-                <span>নিট বিল:</span>
-                <span>{formatCurrency(calculateTotal() - (Number(discount) || 0))}</span>
+              <div className="flex justify-between border-t border-primary/10 pt-4">
+                <span className="text-sm font-black uppercase tracking-tighter">নিট বিল:</span>
+                <span className="text-2xl font-black text-primary tracking-tighter">{formatCurrency(calculateTotal() - (Number(discount) || 0))}</span>
               </div>
-              <div className="flex justify-between text-primary">
-                <span>পরিশোধ:</span>
-                <span>{formatCurrency(Number(paidAmount) || 0)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-danger">
-                <span>বাকি:</span>
-                <span>{formatCurrency(Math.max(0, (calculateTotal() - (Number(discount) || 0)) - (Number(paidAmount) || 0)))}</span>
+              <div className="flex justify-between border-t border-primary/10 pt-4 items-center">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  {(calculateTotal() - (Number(discount) || 0) - (Number(paidAmount) || 0)) > 0 ? "বাকি (+)" : "অ্যাডভান্স (-)"}
+                </span>
+                <span className={cn(
+                  "text-xl font-black tracking-tighter",
+                  (calculateTotal() - (Number(discount) || 0) - (Number(paidAmount) || 0)) > 0 ? "text-danger" : "text-green-600"
+                )}>
+                  {formatCurrency(Math.abs((calculateTotal() - (Number(discount) || 0)) - (Number(paidAmount) || 0)))}
+                </span>
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button onClick={handleCheckout}>নিশ্চিত করুন</Button>
-          </DialogFooter>
+          
+          <div className="p-10 pt-0 bg-primary/5">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button onClick={handleCheckout} className="w-full h-20 rounded-[2rem] bg-primary text-primary-foreground font-black text-xl shadow-2xl shadow-primary/30 hover:bg-primary/90 transition-all border-none">
+                বিক্রয় নিশ্চিত করুন
+              </Button>
+            </motion.div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

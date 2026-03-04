@@ -32,11 +32,14 @@ export const Invoice = React.forwardRef<HTMLDivElement, InvoiceProps>(({ sale },
   return (
     <div ref={ref} className="p-8 bg-white text-black font-sans max-w-3xl mx-auto border shadow-sm print:shadow-none print:border-none">
       {/* Header */}
-      <div className="text-center border-b pb-4 mb-4">
-        <h1 className="text-3xl font-bold uppercase tracking-wide">মেসার্স সৈকত মেশিনারি</h1>
-        <p className="text-sm mt-1">প্রোঃ মোঃ বজলুর রশিদ (ভুট্ট)</p>
-        <p className="text-sm">রানীর হাট, তারাশ, সিরাজগঞ্জ</p>
-        <p className="text-sm font-medium">মোবাইল: 01700000000</p>
+      <div className="text-center border-b-2 border-primary pb-6 mb-6">
+        <h1 className="text-4xl font-black uppercase tracking-tighter text-primary">মেসার্স সৈকত মেশিনারি</h1>
+        <p className="text-sm font-bold mt-1 text-gray-700 uppercase tracking-widest">প্রোঃ মোঃ বজলুর রশিদ (ভুট্ট)</p>
+        <div className="flex justify-center gap-4 text-xs font-medium text-gray-500 mt-2 uppercase">
+          <span>রানীর হাট, তারাশ, সিরাজগঞ্জ</span>
+          <span className="opacity-30">|</span>
+          <span>মোবাইল: 01700000000</span>
+        </div>
       </div>
 
       {/* Customer & Invoice Info */}
