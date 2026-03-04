@@ -127,7 +127,7 @@ export const Invoice = React.forwardRef<HTMLDivElement, InvoiceProps>(({ sale },
 
       {/* Footer Info */}
       <div className="mt-10 text-center text-[10px] font-bold border-t border-black pt-2 italic">
-        * বিক্রিত মাল ফেরত নেওয়া হয় না। ধন্যবাদ আবার আসবেন। *
+        * আপনার সন্তুষ্টিই আমাদের কাম্য। আমাদের সেবায় সন্তুষ্ট থাকলে অন্যদের বলুন। ধন্যবাদ, পুনরায় আসার আমন্ত্রণ রইল। *
       </div>
     </div>
   );
