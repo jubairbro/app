@@ -80,7 +80,7 @@ const Layout = () => {
                <span className="mx-12 text-accent">✦</span>
                <span className="mx-12 font-bold text-sm tracking-wide">মেসার্স সৈকত মেশিনারি - প্রোঃ মোঃ বজলুর রশিদ (ভুট্টু)</span>
                <span className="mx-12 text-accent">✦</span>
-               <span className="mx-12 font-bold text-sm tracking-wide">যেকোনো প্রয়োজনে যোগাযোগ করুন: 01737-975525, 01303-912781</span>
+               <span className="mx-12 font-bold text-sm tracking-wide">আমাদের ঠিকানা: মেসার্স সৈকত মেশিনারি এন্টারপ্রাইজ, (সৈকত বিল্ডিং), বাজার রোড, পটুয়াখালী। যেকোনো প্রয়োজনে সরাসরি যোগাযোগ করুন।</span>
             </div>
 
           </div>
