@@ -39,19 +39,23 @@ const Reports = () => {
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [detailed, setDetailed] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadReports = async () => {
+      setIsLoading(true);
       try {
         const [basic, extra] = await Promise.all([
           fetchApi('/api/reports'),
           fetchApi('/api/reports/detailed')
         ]);
-        setSalesData(basic.salesByDate);
-        setTopProducts(basic.topProducts);
+        setSalesData(basic?.salesByDate || []);
+        setTopProducts(basic?.topProducts || []);
         setDetailed(extra);
-      } catch (error) {
-        console.error("Failed to load reports", error);
+        setError(null);
+      } catch (err: any) {
+        console.error("Failed to load reports", err);
+        setError(err.message || "রিপোর্ট লোড করা সম্ভব হয়নি");
       } finally {
         setIsLoading(false);
       }
@@ -69,11 +73,20 @@ const Reports = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-4 text-danger">
+        <Activity className="h-12 w-12" />
+        <p className="font-black uppercase tracking-widest text-sm">{error}</p>
+      </div>
+    );
+  }
+
   const expenseData = [
-    { name: 'ভাড়া', value: 400 },
-    { name: 'বিল', value: 300 },
-    { name: 'স্যালারি', value: 300 },
-    { name: 'অন্যান্য', value: 200 },
+    { name: 'ভাড়া', value: 40 },
+    { name: 'বিল', value: 30 },
+    { name: 'স্যালারি', value: 20 },
+    { name: 'অন্যান্য', value: 10 },
   ];
 
   return (
@@ -123,21 +136,21 @@ const Reports = () => {
           <CardContent className="p-0">
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={detailed?.charts?.revenue}>
+                <AreaChart data={detailed?.charts?.revenue || []}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#1e293b" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#1e293b" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--primary)" strokeOpacity={0.05} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" strokeOpacity={0.05} />
                   <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900 }} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900 }} tickFormatter={(v) => `৳${v}`} />
                   <Tooltip 
                     contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 50px rgba(0,0,0,0.15)', fontWeight: 900, backgroundColor: 'rgba(255,255,255,0.9)' }}
                     formatter={(v: any) => [formatCurrency(v), "বিক্রয়"]}
                   />
-                  <Area type="monotone" dataKey="amount" stroke="var(--primary)" strokeWidth={4} fillOpacity={1} fill="url(#colorRevenue)" />
+                  <Area type="monotone" dataKey="amount" stroke="#1e293b" strokeWidth={4} fillOpacity={1} fill="url(#colorRevenue)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
