@@ -102,10 +102,10 @@ const Reports = () => {
       {/* Financial Summary Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: "এই মাসের আয়", value: detailed?.monthly?.revenue, icon: DollarSign, color: "text-green-600", bg: "bg-green-500/10" },
-          { title: "এই মাসের খরচ", value: detailed?.monthly?.expense, icon: Receipt, color: "text-danger", bg: "bg-danger/10" },
-          { title: "নিট লাভ (আনুমানিক)", value: detailed?.monthly?.profit, icon: TrendingUp, color: "text-primary", bg: "bg-primary/5" },
-          { title: "বাকি পাওনা", value: detailed?.monthly?.due, icon: ArrowRightLeft, color: "text-amber-600", bg: "bg-amber-500/10" }
+          { title: "এই মাসের আয়", value: detailed?.monthly?.revenue || 0, icon: DollarSign, color: "text-green-600", bg: "bg-green-500/10" },
+          { title: "এই মাসের খরচ", value: detailed?.monthly?.expense || 0, icon: Receipt, color: "text-danger", bg: "bg-danger/10" },
+          { title: "নিট লাভ (আনুমানিক)", value: detailed?.monthly?.profit || 0, icon: TrendingUp, color: "text-primary", bg: "bg-primary/5" },
+          { title: "বাকি পাওনা", value: detailed?.monthly?.due || 0, icon: ArrowRightLeft, color: "text-amber-600", bg: "bg-amber-500/10" }
         ].map((stat, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <Card className="border-none shadow-xl bg-card/40 backdrop-blur-md rounded-[2rem] p-6 border border-primary/5">
@@ -115,7 +115,7 @@ const Reports = () => {
                 </div>
                 <div>
                   <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.title}</div>
-                  <div className={cn("text-xl font-black tracking-tight", stat.color)}>{formatCurrency(stat.value || 0)}</div>
+                  <div className={cn("text-xl font-black tracking-tight", stat.color)}>{formatCurrency(stat.value)}</div>
                 </div>
               </div>
             </Card>
@@ -136,7 +136,7 @@ const Reports = () => {
           <CardContent className="p-0">
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={detailed?.charts?.revenue || []}>
+                <AreaChart data={Array.isArray(detailed?.charts?.revenue) ? detailed.charts.revenue : []}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#1e293b" stopOpacity={0.3}/>
@@ -148,7 +148,7 @@ const Reports = () => {
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900 }} tickFormatter={(v) => `৳${v}`} />
                   <Tooltip 
                     contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 50px rgba(0,0,0,0.15)', fontWeight: 900, backgroundColor: 'rgba(255,255,255,0.9)' }}
-                    formatter={(v: any) => [formatCurrency(v), "বিক্রয়"]}
+                    formatter={(v: any) => [formatCurrency(Number(v) || 0), "বিক্রয়"]}
                   />
                   <Area type="monotone" dataKey="amount" stroke="#1e293b" strokeWidth={4} fillOpacity={1} fill="url(#colorRevenue)" />
                 </AreaChart>
