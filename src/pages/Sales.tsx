@@ -12,6 +12,7 @@ import { fetchApi } from "@/lib/api";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface Product {
   id: string;
@@ -37,6 +38,7 @@ const Sales = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isCartMobileOpen, setIsCartMobileOpen] = useState(false);
+  const [isCartClearConfirmOpen, setIsCartClearConfirmOpen] = useState(false);
   
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -167,7 +169,7 @@ const Sales = () => {
           </div>
           কার্ট ({cart.length})
         </h2>
-        <Button variant="ghost" size="sm" onClick={() => setCart([])} className="text-danger font-black text-[10px] uppercase tracking-widest hover:bg-danger/10">মুছে ফেলুন</Button>
+        <Button variant="ghost" size="sm" onClick={() => setIsCartClearConfirmOpen(true)} className="text-danger font-black text-[10px] uppercase tracking-widest hover:bg-danger/10">মুছে ফেলুন</Button>
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
@@ -463,6 +465,20 @@ const Sales = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={isCartClearConfirmOpen}
+        onOpenChange={setIsCartClearConfirmOpen}
+        title="কার্ট খালি করুন"
+        description="আপনি কি নিশ্চিত যে আপনি কার্টের সকল পণ্য মুছে ফেলতে চান?"
+        onConfirm={() => {
+          setCart([]);
+          setIsCartClearConfirmOpen(false);
+          toast({ title: "সফল", description: "কার্ট খালি করা হয়েছে", type: "success" });
+        }}
+        confirmText="হ্যাঁ, খালি করুন"
+        variant="destructive"
+      />
     </div>
   );
 };

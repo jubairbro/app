@@ -32,7 +32,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkAuth = async () => {
       try {
         const data = await fetchApi('/api/auth/me');
-        setUser(data.user);
+        if (data && data.user) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
       } catch (error) {
         setUser(null);
       } finally {

@@ -1,15 +1,8 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import RequireAuth from "@/components/RequireAuth";
 import Layout from "@/components/Layout";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import Inventory from "@/pages/Inventory";
 import Sales from "@/pages/Sales";
@@ -17,15 +10,14 @@ import Memos from "@/pages/Memos";
 import DueBook from "@/pages/DueBook";
 import Reports from "@/pages/Reports";
 import Profile from "@/pages/Profile";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Expenses from "@/pages/Expenses";
+import Suppliers from "@/pages/Suppliers";
+import Staff from "@/pages/Staff";
+import StockHistory from "@/pages/StockHistory";
 
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { role, loading } = useAuth();
-  if (loading) return <div className="flex h-screen items-center justify-center">লোড হচ্ছে...</div>;
-  if (role !== "admin") return <Navigate to="/inventory" replace />;
-  return <>{children}</>;
-};
-
-export default function App() {
+function App() {
   return (
     <AuthProvider>
       <Router>
@@ -34,18 +26,24 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           
           <Route element={<Layout />}>
-            <Route path="/" element={<RequireAuth><AdminRoute><Dashboard /></AdminRoute></RequireAuth>} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/sales" element={<RequireAuth><AdminRoute><Sales /></AdminRoute></RequireAuth>} />
-            <Route path="/memos" element={<RequireAuth><AdminRoute><Memos /></AdminRoute></RequireAuth>} />
-            <Route path="/due-book" element={<RequireAuth><AdminRoute><DueBook /></AdminRoute></RequireAuth>} />
-            <Route path="/reports" element={<RequireAuth><AdminRoute><Reports /></AdminRoute></RequireAuth>} />
+            <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/inventory" element={<RequireAuth><Inventory /></RequireAuth>} />
+            <Route path="/sales" element={<RequireAuth><Sales /></RequireAuth>} />
+            <Route path="/memos" element={<RequireAuth><Memos /></RequireAuth>} />
+            <Route path="/due-book" element={<RequireAuth><DueBook /></RequireAuth>} />
+            <Route path="/expenses" element={<RequireAuth><Expenses /></RequireAuth>} />
+            <Route path="/suppliers" element={<RequireAuth><Suppliers /></RequireAuth>} />
+            <Route path="/staff" element={<RequireAuth><Staff /></RequireAuth>} />
+            <Route path="/stock-history" element={<RequireAuth><StockHistory /></RequireAuth>} />
+            <Route path="/reports" element={<RequireAuth><Reports /></RequireAuth>} />
             <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/inventory" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
   );
 }
+
+export default App;

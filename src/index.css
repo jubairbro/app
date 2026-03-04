@@ -4,25 +4,25 @@
 @theme {
   --font-sans: "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
   
-  --color-primary: #1e293b;
-  --color-primary-foreground: #ffffff;
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   
-  --color-accent: #f59e0b;
-  --color-accent-foreground: #1e293b;
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
   
-  --color-danger: #ef4444;
-  --color-danger-foreground: #ffffff;
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
   
-  --color-muted: #64748b;
-  --color-muted-foreground: #94a3b8;
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   
-  --color-card: #ffffff;
-  --color-card-foreground: #0f172a;
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   
-  --color-border: #e2e8f0;
+  --color-border: var(--border);
 }
 
 @layer base {
