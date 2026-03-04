@@ -28,8 +28,12 @@
 
 ### ১. ব্যাকএন্ড সেটআপ
 ```bash
-# পাইথন ডিপেন্ডেন্সি ইনস্টল করুন
-pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] pydantic-settings python-multipart
+# পাইথন ভার্চুয়াল এনভায়রনমেন্ট তৈরি করুন
+python3 -m venv venv
+source venv/bin/activate
+
+# প্রয়োজনীয় ডিপেন্ডেন্সি ইনস্টল করুন (সঠিক ভার্সনসহ)
+pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] pydantic-settings python-multipart jinja2 email-validator bcrypt==4.0.1
 
 # ব্যাকএন্ড সার্ভার চালু করুন
 python3 main.py
@@ -72,7 +76,7 @@ npm run build
 - আপনার কম্পিউটারের টার্মিনাল বা cPanel-এর **'Terminal'** অপশন থেকে ওই কমান্ডটি রান করুন।
 - এরপর নিচের কমান্ডটি দিয়ে সব লাইব্রেরি ইনস্টল করুন:
   ```bash
-  pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] pydantic-settings python-multipart jinja2
+  pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] pydantic-settings python-multipart jinja2 email-validator bcrypt==4.0.1
   ```
 
 ### ৩. ফ্রন্টএন্ড বিল্ড আপলোড করা
