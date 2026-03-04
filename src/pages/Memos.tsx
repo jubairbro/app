@@ -56,12 +56,12 @@ const Memos = () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const canvas = await (html2canvas as any)(element, {
-        scale: 3, // Higher scale for better quality
+        scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        allowTaint: true,
-        fontStyle: 'normal'
+        allowTaint: false, // allowTaint can sometimes break useCORS
+        proxy: window.location.origin
       });
       
       const imgData = canvas.toDataURL("image/png", 1.0);

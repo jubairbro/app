@@ -57,11 +57,7 @@ const Staff = () => {
   const fetchStaff = async () => {
     setIsLoading(true);
     try {
-      // Mocking for now, would be /api/users
-      const data = [
-        { id: 1, name: "Md. Bazlur Rashid", email: "admin@saikat.com", role: "admin", status: "active", createdAt: "2026-03-01" },
-        { id: 2, name: "Staff Member", email: "staff@saikat.com", role: "staff", status: "active", createdAt: "2026-03-02" }
-      ];
+      const data = await fetchApi('/api/users');
       setStaff(data);
     } catch (error) {
       toast({ title: "ভুল হয়েছে", description: "স্টাফ তালিকা পাওয়া যায়নি", type: "error" });
@@ -78,15 +74,32 @@ const Staff = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // API Call
-      toast({ title: "সফল", description: "নতুন স্টাফ অ্যাকাউন্ট তৈরি হয়েছে", type: "success" });
+      await fetchApi('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role })
+      });
+      toast({ title: "সফল", description: "নতুন মেম্বার অ্যাকাউন্ট তৈরি হয়েছে", type: "success" });
       setIsAddOpen(false);
-      setName(""); setEmail(""); setPassword("");
+      setName(""); setEmail(""); setPassword(""); setRole("staff");
       fetchStaff();
-    } catch (error) {
-      toast({ title: "ব্যর্থ", description: "অ্যাকাউন্ট তৈরি করা যায়নি", type: "error" });
+    } catch (error: any) {
+      toast({ title: "ব্যর্থ", description: error.message || "অ্যাকাউন্ট তৈরি করা যায়নি", type: "error" });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSuspend = async () => {
+    if (!staffToDelete) return;
+    try {
+      await fetchApi(`/api/users/${staffToDelete}`, { method: 'DELETE' });
+      toast({ title: "সফল", description: "অ্যাকাউন্ট সাসপেন্ড করা হয়েছে", type: "success" });
+      setIsDeleteOpen(false);
+      setStaffToDelete(null);
+      fetchStaff();
+    } catch (error: any) {
+      toast({ title: "ব্যর্থ", description: error.message || "কাজটি সম্পন্ন করা যায়নি", type: "error" });
     }
   };
 
@@ -265,10 +278,7 @@ const Staff = () => {
         onOpenChange={setIsDeleteOpen}
         title="অ্যাকাউন্ট সাসপেন্ড"
         description="আপনি কি নিশ্চিত যে এই স্টাফ মেম্বারের অ্যাক্সেস বন্ধ করতে চান?"
-        onConfirm={() => {
-          setIsDeleteOpen(false);
-          toast({ title: "সফল", description: "স্টাফ অ্যাকাউন্ট সাসপেন্ড করা হয়েছে", type: "success" });
-        }}
+        onConfirm={handleSuspend}
         confirmText="হ্যাঁ, বন্ধ করুন"
       />
     </div>

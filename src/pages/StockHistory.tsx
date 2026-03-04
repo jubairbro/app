@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 
 interface StockLog {
   id: number;
@@ -31,19 +32,16 @@ const StockHistory = () => {
   const [logs, setLogs] = useState<StockLog[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
-      // Mocking for now, backend logic is ready in StockLog model
-      const data = [
-        { id: 1, productId: 101, productName: "Sonalika Piston", changeAmount: 20, reason: "Purchase", createdAt: "2026-03-04T10:00:00Z" },
-        { id: 2, productId: 102, productName: "Mobil Super 4T", changeAmount: -5, reason: "Sale MEMO-A1B2", createdAt: "2026-03-04T11:30:00Z" },
-        { id: 3, productId: 101, productName: "Sonalika Piston", changeAmount: -1, reason: "Damage", createdAt: "2026-03-04T14:20:00Z" }
-      ];
+      const data = await fetchApi('/api/stock-logs');
       setLogs(data);
     } catch (error) {
       console.error("Failed to load stock history", error);
+      toast({ title: "ভুল হয়েছে", description: "স্টক হিস্ট্রি লোড করা যায়নি", type: "error" });
     } finally {
       setIsLoading(false);
     }

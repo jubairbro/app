@@ -12,9 +12,9 @@ from fastapi import FastAPI, Depends, HTTPException, status, Request, Response, 
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, Text, desc, func, and_
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, Text, desc, func, and_, text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session, relationship
+from sqlalchemy.orm import sessionmaker, Session, relationship, joinedload
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr
@@ -216,7 +216,7 @@ class SaleCreate(BaseModel):
 app = FastAPI(title="Saikat Machinery Enterprise ERP", version="3.0.0")
 app.add_middleware(
     CORSMiddleware, 
-    allow_origins=["*"], 
+    allow_origin_regex="https?://.*", # Allow credentials with any origin
     allow_credentials=True, 
     allow_methods=["*"], 
     allow_headers=["*"]
@@ -232,9 +232,45 @@ async def log_requests(request: Request, call_next):
 
 @app.on_event("startup")
 def startup_seeding():
+    # Robust Migration using sqlite3 directly
+    import sqlite3
+    try:
+        conn = sqlite3.connect(DATABASE_URL.replace("sqlite:///", ""))
+        cursor = conn.cursor()
+        
+        # --- Migration for 'users' table ---
+        cursor.execute("PRAGMA table_info(users)")
+        u_columns = [column[1] for column in cursor.fetchall()]
+        if "name" not in u_columns:
+            cursor.execute("ALTER TABLE users ADD COLUMN name VARCHAR DEFAULT 'User'")
+        if "status" not in u_columns:
+            cursor.execute("ALTER TABLE users ADD COLUMN status VARCHAR DEFAULT 'active'")
+            
+        # --- Migration for 'products' table ---
+        cursor.execute("PRAGMA table_info(products)")
+        p_columns = [column[1] for column in cursor.fetchall()]
+        if "sku" not in p_columns:
+            cursor.execute("ALTER TABLE products ADD COLUMN sku VARCHAR")
+        if "minStockLevel" not in p_columns:
+            cursor.execute("ALTER TABLE products ADD COLUMN minStockLevel INTEGER DEFAULT 10")
+        if "description" not in p_columns:
+            cursor.execute("ALTER TABLE products ADD COLUMN description TEXT")
+        # --- Migration for 'sales' table ---
+        cursor.execute("PRAGMA table_info(sales)")
+        s_columns = [column[1] for column in cursor.fetchall()]
+        if "paymentMethod" not in s_columns:
+            cursor.execute("ALTER TABLE sales ADD COLUMN paymentMethod VARCHAR DEFAULT 'cash'")
+        if "createdAt" not in s_columns:
+            cursor.execute("ALTER TABLE sales ADD COLUMN createdAt DATETIME")
+            
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Migration Error: {e}")
+
     db = SessionLocal()
     if not db.query(User).filter(User.email == "admin@saikat.com").first():
-        db.add(User(name="Admin", email="admin@saikat.com", password=get_password_hash("@Admin123"), role="admin"))
+        db.add(User(name="Admin", email="admin@saikat.com", password=get_password_hash("@Admin123"), role="admin", status="active"))
         db.commit()
     db.close()
 
@@ -253,8 +289,20 @@ async def login(user_data: UserLogin, request: Request, response: Response, db: 
     if not user or not verify_password(user_data.password, user.password):
         raise HTTPException(401, detail="ভুল ইমেইল বা পাসওয়ার্ড")
     token = create_access_token({"email": user.email})
-    is_secure = request.url.scheme == "https"
-    response.set_cookie("token", token, httponly=True, secure=is_secure, samesite="lax", path="/", max_age=30*86400)
+    
+    # Trust X-Forwarded-Proto if behind proxy
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    is_secure = proto == "https"
+    
+    response.set_cookie(
+        "token", 
+        token, 
+        httponly=True, 
+        secure=is_secure, 
+        samesite="lax", 
+        path="/", 
+        max_age=30*86400
+    )
     return {"user": {"email": user.email, "role": user.role, "name": user.name}}
 
 @app.get("/api/auth/me")
@@ -283,8 +331,11 @@ async def create_product(
     sku: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    if user.role != "admin": raise HTTPException(403, detail="অনুমতি নেই")
+    
     img_path = None
     if image:
         ext = image.filename.split('.')[-1]
@@ -301,15 +352,73 @@ async def create_product(
     db.commit()
     return prod
 
+@app.put("/api/products/{id}")
+async def update_product(
+    id: int,
+    name: str = Form(...),
+    category: str = Form(...),
+    purchasePrice: float = Form(...),
+    wholesalePrice: float = Form(...),
+    retailPrice: float = Form(...),
+    stock: int = Form(...),
+    unit: str = Form(...),
+    sku: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    image: Optional[UploadFile] = File(None),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if user.role != "admin": raise HTTPException(403, detail="অনুমতি নেই")
+    
+    prod = db.query(Product).get(id)
+    if not prod: raise HTTPException(404, detail="পণ্য পাওয়া যায়নি")
+    
+    prod.name = name
+    prod.category = category
+    prod.purchasePrice = purchasePrice
+    prod.wholesalePrice = wholesalePrice
+    prod.retailPrice = retailPrice
+    prod.unit = unit
+    prod.sku = sku
+    prod.description = description
+    
+    # Handle Stock change log if updated
+    if prod.stock != stock:
+        diff = stock - prod.stock
+        db.add(StockLog(productId=prod.id, changeAmount=diff, reason="Manual Update"))
+        prod.stock = stock
+        
+    if image:
+        ext = image.filename.split('.')[-1]
+        fname = f"{uuid.uuid4().hex[:12]}.{ext}"
+        save_path = UPLOADS_DIR / fname
+        with open(save_path, "wb") as f: shutil.copyfileobj(image.file, f)
+        prod.imageUrl = f"/uploads/{fname}"
+    
+    db.commit()
+    return prod
+
 @app.delete("/api/products/{id}")
-async def delete_product(id: int, db: Session = Depends(get_db)):
+async def delete_product(id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403, detail="অনুমতি নেই")
     p = db.query(Product).get(id)
     if p: db.delete(p); db.commit()
     return {"ok": True}
-
 # --- Sales & Ledger ---
+@app.get("/api/sales")
+async def list_sales(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    sales = db.query(Sale).options(joinedload(Sale.items)).order_by(desc(Sale.createdAt)).all()
+    return sales
+
+@app.get("/api/sales/{id}")
+async def get_sale(id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    sale = db.query(Sale).options(joinedload(Sale.items)).filter(Sale.id == id).first()
+    if not sale: raise HTTPException(404, detail="মেমো পাওয়া যায়নি")
+    return sale
+
 @app.post("/api/sales")
-async def perform_sale(data: SaleCreate, db: Session = Depends(get_db)):
+
+async def perform_sale(data: SaleCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         # Customer Handling
         if data.customerId:
@@ -347,11 +456,11 @@ async def perform_sale(data: SaleCreate, db: Session = Depends(get_db)):
         raise HTTPException(500, detail=str(e))
 
 @app.get("/api/customers")
-async def list_customers(db: Session = Depends(get_db)): 
+async def list_customers(user: User = Depends(get_current_user), db: Session = Depends(get_db)): 
     return db.query(Customer).order_by(Customer.name).all()
 
 @app.post("/api/customers")
-async def create_customer(data: CustomerCreate, db: Session = Depends(get_db)):
+async def create_customer(data: CustomerCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     existing = db.query(Customer).filter(Customer.phone == data.phone).first()
     if existing:
         raise HTTPException(400, detail="এই মোবাইল নম্বর দিয়ে অলরেডি কাস্টমার আছে")
@@ -360,32 +469,97 @@ async def create_customer(data: CustomerCreate, db: Session = Depends(get_db)):
     return c
 
 @app.post("/api/customers/{id}/manual-due")
-async def add_manual_due(id: int, data: ManualDueCreate, db: Session = Depends(get_db)):
+async def add_manual_due(id: int, data: ManualDueCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403)
     c = db.query(Customer).get(id)
     if not c: raise HTTPException(404, detail="কাস্টমার পাওয়া যায়নি")
     c.totalDue += data.amount
     db.commit()
     return {"ok": True, "newBalance": c.totalDue}
 
-@app.post("/api/customers/{id}/pay")
-async def customer_payment(id: int, data: Dict[str, float], db: Session = Depends(get_db)):
+@app.post("/api/customers/{id}/payment")
+async def customer_payment(id: int, data: Dict[str, float], user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403)
     c = db.query(Customer).get(id)
-    if c: c.totalDue -= data.get("amount", 0); db.commit()
+    if not c: raise HTTPException(404, detail="কাস্টমার পাওয়া যায়নি")
+    c.totalDue -= data.get("amount", 0)
+    db.commit()
+    return {"ok": True, "newBalance": c.totalDue}
+
+# --- Staff Management ---
+@app.get("/api/users")
+async def list_users(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403)
+    return db.query(User).order_by(User.name).all()
+
+@app.delete("/api/users/{id}")
+async def suspend_user(id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403)
+    u = db.query(User).get(id)
+    if u:
+        if u.email == "admin@saikat.com": raise HTTPException(400, detail="মেইন অ্যাডমিনকে ডিলিট করা সম্ভব নয়")
+        db.delete(u)
+        db.commit()
+    return {"ok": True}
+
+# --- Reports ---
+@app.get("/api/reports")
+async def basic_reports(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403)
+    
+    # Sales by date (last 30 days)
+    sales_by_date = db.query(
+        func.date(Sale.createdAt).label("date"),
+        func.sum(Sale.finalAmount).label("totalSales")
+    ).group_by(func.date(Sale.createdAt)).order_by(desc("date")).limit(30).all()
+    
+    # Top products
+    top_products = db.query(
+        SaleItem.name,
+        func.sum(SaleItem.quantity).label("totalQuantity"),
+        func.sum(SaleItem.quantity * SaleItem.salePrice).label("totalRevenue")
+    ).group_by(SaleItem.productId).order_by(desc("totalQuantity")).limit(5).all()
+    
+    return {
+        "salesByDate": [dict(r._mapping) for r in sales_by_date],
+        "topProducts": [dict(r._mapping) for r in top_products]
+    }
+
+# --- Auth Profile & Register ---
+@app.get("/api/auth/profile")
+async def get_profile(user: User = Depends(get_current_user)):
+    return {"email": user.email, "name": user.name, "role": user.role, "status": user.status}
+
+@app.post("/api/auth/register")
+async def register_user(data: Dict[str, Any], user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403, detail="অনুমতি নেই")
+    if db.query(User).filter(User.email == data.get("email")).first():
+        raise HTTPException(400, detail="এই ইমেইল দিয়ে অলরেডি ইউজার আছে")
+    
+    new_user = User(
+        name=data.get("name"),
+        email=data.get("email"),
+        password=get_password_hash(data.get("password")),
+        role=data.get("role", "staff"),
+        status="active"
+    )
+    db.add(new_user); db.commit(); db.refresh(new_user)
     return {"ok": True}
 
 # --- Expenses ---
 @app.get("/api/expenses")
-async def get_expenses(db: Session = Depends(get_db)):
+async def get_expenses(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return db.query(Expense).order_by(desc(Expense.createdAt)).all()
 
 @app.post("/api/expenses")
-async def add_expense(data: ExpenseCreate, db: Session = Depends(get_db)):
+async def add_expense(data: ExpenseCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     exp = Expense(**data.dict())
     db.add(exp); db.commit(); return exp
 
 # --- Advanced Reports ---
 @app.get("/api/reports/detailed")
-async def enterprise_reports(db: Session = Depends(get_db)):
+async def enterprise_reports(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403)
     now = datetime.utcnow()
     m_start = now.replace(day=1, hour=0, minute=0, second=0)
     
@@ -408,12 +582,6 @@ async def enterprise_reports(db: Session = Depends(get_db)):
         "monthly": {"revenue": m_sales, "paid": m_paid, "due": m_due, "expense": m_expense, "profit": estimated_profit},
         "charts": {"revenue": [dict(r._mapping) for r in daily_revenue]}
     }
-
-@app.get("/api/notifications")
-async def alerts(db: Session = Depends(get_db)):
-    low = db.query(Product).filter(Product.stock <= Product.minStockLevel).all()
-    n = [{"id": f"ls-{p.id}", "title": "স্টক শেষ", "message": f"{p.name} মাত্র {p.stock} {p.unit} আছে।"} for p in low]
-    return n
 
 @app.get("/api/dashboard")
 async def dashboard_summary(db: Session = Depends(get_db)):
@@ -451,17 +619,63 @@ async def system_reset(user: User = Depends(get_current_user), db: Session = Dep
     for f in Path("./uploads").glob("*"): f.unlink()
     return {"ok": True}
 
+# --- Suppliers Endpoints ---
+@app.get("/api/suppliers")
+async def list_suppliers(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return db.query(Supplier).order_by(Supplier.name).all()
+
+@app.post("/api/suppliers")
+async def create_supplier(data: Dict[str, Any], user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403)
+    s = Supplier(
+        name=data.get("name"),
+        contactPerson=data.get("contactPerson"),
+        phone=data.get("phone"),
+        email=data.get("email"),
+        address=data.get("address"),
+        totalBalance=data.get("initialBalance", 0.0)
+    )
+    db.add(s); db.commit(); db.refresh(s)
+    return s
+
+@app.post("/api/suppliers/{id}/pay")
+async def supplier_payment(id: int, data: Dict[str, float], user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403)
+    s = db.query(Supplier).get(id)
+    if not s: raise HTTPException(404, detail="সাপ্লায়ার পাওয়া যায়নি")
+    amount = data.get("amount", 0)
+    s.totalBalance -= amount
+    db.commit()
+    return {"ok": True, "newBalance": s.totalBalance}
+
+# --- Stock Logs ---
+@app.get("/api/stock-logs")
+async def get_stock_logs(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    logs = db.query(StockLog, Product.name.label("productName"))\
+             .join(Product, StockLog.productId == Product.id)\
+             .order_by(desc(StockLog.createdAt)).limit(100).all()
+    return [{"id": l[0].id, "productId": l[0].productId, "productName": l[1], "changeAmount": l[0].changeAmount, "reason": l[0].reason, "createdAt": l[0].createdAt} for l in logs]
+
 # --- Static ---
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+
 dist_path = BASE_DIR / "dist"
 if dist_path.exists():
     app.mount("/assets", StaticFiles(directory=str(dist_path / "assets")), name="assets")
     @app.get("/{p:path}")
     async def spa_handler(p: str):
         if p.startswith("api/"): raise HTTPException(404)
+        # If it reached here and it's an upload, it means the mount failed to find it.
+        # We should still allow it to fall through or return 404.
+        if p.startswith("uploads/"): 
+             # Check if file exists, if not, it's a genuine 404
+             file_path = BASE_DIR / p
+             if file_path.exists():
+                 return FileResponse(str(file_path))
+             raise HTTPException(404)
         return FileResponse(str(dist_path / "index.html"))
 
 if __name__ == "__main__":
     import uvicorn
     # Use 0.0.0.0 to allow access from shared hosting/external
-    uvicorn.run(app, host="0.0.0.0", port=3000)
+    uvicorn.run(app, host="0.0.0.0", port=3000, proxy_headers=True, forwarded_allow_ips="*")

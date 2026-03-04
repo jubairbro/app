@@ -213,7 +213,7 @@ const Inventory = () => {
                           </td>
                           {isAdmin && (
                             <td className="px-6 py-4 text-center">
-                              <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center justify-center gap-1 transition-opacity">
                                 <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                                   <Button
                                     variant="ghost"
@@ -301,7 +301,7 @@ const Inventory = () => {
                     </div>
                     
                     {isAdmin && (
-                      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute top-3 right-3 transition-opacity">
                          <div className="flex flex-col gap-1">
                             <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-lg" onClick={() => { setProductToEdit(product); setIsDialogOpen(true); }}>
                                 <Edit className="h-3.5 w-3.5" />

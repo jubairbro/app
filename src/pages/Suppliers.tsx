@@ -61,8 +61,7 @@ const Suppliers = () => {
   const fetchSuppliers = async () => {
     setIsLoading(true);
     try {
-      // Note: Backend might need /api/suppliers endpoint, assuming logic similar to customers
-      const data = await fetchApi('/api/customers'); // Placeholder for now
+      const data = await fetchApi('/api/suppliers');
       setSuppliers(data);
     } catch (error) {
       toast({ title: "ভুল হয়েছে", description: "সাপ্লায়ার তালিকা পাওয়া যায়নি", type: "error" });
@@ -79,13 +78,37 @@ const Suppliers = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // Call to /api/suppliers
+      await fetchApi('/api/suppliers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, contactPerson, phone, email, address })
+      });
       toast({ title: "সফল", description: "নতুন সাপ্লায়ার যুক্ত হয়েছে", type: "success" });
       setIsAddOpen(false);
-      setName(""); setPhone("");
+      setName(""); setContactPerson(""); setPhone(""); setEmail(""); setAddress("");
       fetchSuppliers();
     } catch (error) {
       toast({ title: "ব্যর্থ", description: "সেভ করা সম্ভব হয়নি", type: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!selectedSupplier || !payAmount) return;
+    setIsSubmitting(true);
+    try {
+      await fetchApi(`/api/suppliers/${selectedSupplier.id}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: Number(payAmount) })
+      });
+      toast({ title: "সফল", description: "পেমেন্ট সফল হয়েছে", type: "success" });
+      setIsPayOpen(false);
+      setPayAmount("");
+      fetchSuppliers();
+    } catch (error) {
+      toast({ title: "ব্যর্থ", description: "পেমেন্ট করা সম্ভব হয়নি", type: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -283,8 +306,12 @@ const Suppliers = () => {
                 placeholder="0.00"
               />
             </div>
-            <Button className="w-full h-16 rounded-2xl font-black text-lg bg-accent text-accent-foreground shadow-xl shadow-accent/20">
-              পেমেন্ট নিশ্চিত করুন
+            <Button 
+              className="w-full h-16 rounded-2xl font-black text-lg bg-accent text-accent-foreground shadow-xl shadow-accent/20"
+              onClick={handlePayment}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "প্রসেস হচ্ছে..." : "পেমেন্ট নিশ্চিত করুন"}
             </Button>
           </div>
         </DialogContent>

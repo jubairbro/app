@@ -1,19 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, ShoppingCart, Trash2, Image as ImageIcon, Plus, ArrowRight, X, User, Phone, MapPin } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { Search, ShoppingCart, Trash2, Image as ImageIcon, Plus, ArrowRight, X, User, Phone, MapPin, Download, Printer, CheckCircle2 } from "lucide-react";
+import { formatCurrency, cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchApi } from "@/lib/api";
 import { motion, AnimatePresence } from "motion/react";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { Select } from "@/components/ui/select-native";
+import { Invoice } from "@/components/Invoice";
+import { useReactToPrint } from "react-to-print";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 interface Product {
   id: string;
@@ -33,12 +36,54 @@ interface CartItem extends Product {
   salePrice: number;
 }
 
+interface Sale {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  items: CartItem[];
+  totalAmount: number;
+  discount: number;
+  finalAmount: number;
+  paidAmount: number;
+  dueAmount: number;
+  createdAt?: any;
+}
+
 const Sales = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const invoiceRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: invoiceRef,
+  });
+
+  const handleDownloadPDF = async () => {
+    if (!invoiceRef.current || !lastSale) return;
+    setIsDownloading(true);
+    try {
+      const canvas = await (html2canvas as any)(invoiceRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Invoice_${lastSale.id}.pdf`);
+    } catch (e) {
+      toast({ title: "ব্যর্থ", description: "PDF তৈরি করা সম্ভব হয়নি", type: "error" });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const [isCartMobileOpen, setIsCartMobileOpen] = useState(false);
   const [isCartClearConfirmOpen, setIsCartClearConfirmOpen] = useState(false);
   
@@ -66,8 +111,8 @@ const Sales = () => {
         ]);
         setProducts(prods);
         setCustomers(custs);
-      } catch (error) {
-        toast({ title: "ভুল হয়েছে", description: "ডাটা লোড করা যায়নি", type: "error" });
+      } catch (error: any) {
+        toast({ title: "ভুল হয়েছে", description: error.message || "ডাটা লোড করা যায়নি", type: "error" });
       }
     };
     loadData();
@@ -147,7 +192,7 @@ const Sales = () => {
     const due = finalAmount - paid;
 
     try {
-      await fetchApi('/api/sales', {
+      const response = await fetchApi('/api/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -166,13 +211,29 @@ const Sales = () => {
         }),
       });
 
+      const saleData: Sale = {
+        id: response.id,
+        customerName: customerMode === "new" ? customerName : (selectedCustomer?.name || ""),
+        customerPhone: customerMode === "new" ? customerPhone : (selectedCustomer?.phone || ""),
+        customerAddress: customerMode === "new" ? customerAddress : (selectedCustomer?.address || ""),
+        items: [...cart],
+        totalAmount,
+        discount: discountAmount,
+        finalAmount,
+        paidAmount: paid,
+        dueAmount: due,
+        createdAt: new Date()
+      };
+
+      setLastSale(saleData);
+      setIsCheckoutOpen(false);
+      setIsSuccessOpen(true);
+      
       toast({ title: "সফল", description: "বিক্রয় সম্পন্ন হয়েছে", type: "success" });
       setCart([]);
-      setIsCheckoutOpen(false);
       setIsCartMobileOpen(false);
       setCustomerName(""); setCustomerPhone(""); setCustomerAddress("");
       setPaidAmount(""); setDiscount(""); setSelectedCustomerId("");
-      navigate("/memos");
     } catch (e: any) {
       toast({ title: "ব্যর্থ হয়েছে", description: e.message || "বিক্রয় করা সম্ভব হয়নি", type: "error" });
     }
@@ -562,6 +623,57 @@ const Sales = () => {
         confirmText="হ্যাঁ, খালি করুন"
         variant="destructive"
       />
+
+      {/* Sale Success Dialog */}
+      <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[95vh] overflow-y-auto rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card/90 backdrop-blur-2xl">
+          <div className="bg-green-600 p-8 text-white flex justify-between items-center sticky top-0 z-50">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white/20 rounded-2xl">
+                <CheckCircle2 className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-3xl font-black tracking-tight">বিক্রয় সফল!</DialogTitle>
+                <p className="text-white/80 font-bold">মেমো নম্বর: {lastSale?.id}</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="secondary" 
+                onClick={handleDownloadPDF} 
+                disabled={isDownloading}
+                className="bg-white/10 text-white hover:bg-white/20 border-none rounded-xl font-black text-xs uppercase tracking-widest h-12 px-6"
+              >
+                {isDownloading ? "..." : <Download className="mr-2 h-5 w-5" />} PDF
+              </Button>
+              <Button 
+                onClick={() => handlePrint()}
+                className="bg-white text-green-600 hover:bg-white/90 rounded-xl font-black text-xs uppercase tracking-widest h-12 px-6 shadow-xl"
+              >
+                <Printer className="mr-2 h-5 w-5" /> প্রিন্ট
+              </Button>
+            </div>
+          </div>
+          
+          <div className="p-10 bg-muted/20">
+            <div className="bg-white shadow-2xl rounded-sm overflow-hidden border border-black/5 mx-auto">
+              {lastSale && <Invoice ref={invoiceRef} sale={lastSale as any} />}
+            </div>
+            <div className="mt-10">
+              <Button 
+                onClick={() => {
+                  setIsSuccessOpen(false);
+                  navigate("/memos");
+                }}
+                variant="outline"
+                className="w-full h-16 rounded-2xl border-green-600/20 text-green-600 font-black text-lg hover:bg-green-50"
+              >
+                মেমো তালিকায় যান
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
