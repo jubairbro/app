@@ -6,3 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Custom ignores for source-only push
+uploads/
+__pycache__/
+*.pyc
+data/database.sqlite
+app.log
