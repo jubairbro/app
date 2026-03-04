@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, DollarSign, Plus, User, Phone, MapPin, ArrowUpRight, ArrowDownRight, Wallet, History, AlertCircle } from "lucide-react";
+import { Search, DollarSign, Plus, User, Phone, MapPin, ArrowUpRight, ArrowDownRight, Wallet, History, AlertCircle, ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -94,6 +94,23 @@ const DueBook = () => {
       fetchCustomers();
     } catch (error: any) {
       toast({ title: "ব্যর্থ", description: error.message || "বাকি যোগ করা যায়নি", type: "error" });
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!selectedCustomer || !paymentAmount) return;
+    try {
+      await fetchApi(`/api/customers/${selectedCustomer.id}/payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: Number(paymentAmount) }),
+      });
+      toast({ title: "সফল", description: "লেনদেন সম্পন্ন হয়েছে", type: "success" });
+      setIsPaymentOpen(false);
+      setPaymentAmount("");
+      fetchCustomers();
+    } catch (error: any) {
+      toast({ title: "ব্যর্থ", description: error.message || "লেনদেন করা যায়নি", type: "error" });
     }
   };
 
@@ -327,6 +344,7 @@ const DueBook = () => {
                 <Input 
                   className="pl-16 h-20 rounded-3xl bg-primary/5 border-primary/10 font-black text-4xl text-primary focus:ring-primary shadow-inner text-center pr-8" 
                   type="number" 
+                  step="any"
                   value={paymentAmount} 
                   onChange={e => setPaymentAmount(e.target.value)} 
                   placeholder="0.00" 
@@ -378,7 +396,7 @@ const DueBook = () => {
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">পূর্বের বাকি (যদি থাকে)</Label>
-              <Input className="h-14 rounded-2xl bg-danger/5 border-danger/10 font-black text-xl text-danger focus:ring-danger shadow-inner" type="number" value={newCustInitialDue} onChange={e => setNewCustInitialDue(e.target.value)} placeholder="0.00" />
+              <Input className="h-14 rounded-2xl bg-danger/5 border-danger/10 font-black text-xl text-danger focus:ring-danger shadow-inner" type="number" step="any" value={newCustInitialDue} onChange={e => setNewCustInitialDue(e.target.value)} placeholder="0.00" />
             </div>
           </div>
           
@@ -411,7 +429,7 @@ const DueBook = () => {
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">বাকি টাকার পরিমাণ</Label>
-              <Input className="h-14 rounded-2xl bg-danger/5 border-danger/10 font-black text-2xl text-danger focus:ring-danger shadow-inner" type="number" value={manualDueAmount} onChange={e => setManualDueAmount(e.target.value)} placeholder="0.00" />
+              <Input className="h-14 rounded-2xl bg-danger/5 border-danger/10 font-black text-2xl text-danger focus:ring-danger shadow-inner" type="number" step="any" value={manualDueAmount} onChange={e => setManualDueAmount(e.target.value)} placeholder="0.00" />
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">কারন (Reason)</Label>

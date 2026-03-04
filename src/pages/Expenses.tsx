@@ -284,6 +284,7 @@ const Expenses = () => {
                   <Input 
                     className="h-14 rounded-2xl bg-danger/5 border-danger/10 font-black text-xl text-danger focus:ring-danger shadow-inner"
                     type="number"
+                    step="any"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"

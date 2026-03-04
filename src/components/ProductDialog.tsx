@@ -177,6 +177,7 @@ const ProductDialog = ({ open, onOpenChange, productToEdit, onSuccess }: Product
               <Input
                 id="purchasePrice"
                 type="number"
+                step="any"
                 placeholder="0.00"
                 className="h-12 rounded-2xl bg-background/50 border-danger/10 focus:ring-danger font-bold shadow-sm"
                 {...register("purchasePrice", { required: true, min: 0 })}
@@ -190,6 +191,7 @@ const ProductDialog = ({ open, onOpenChange, productToEdit, onSuccess }: Product
               <Input
                 id="wholesalePrice"
                 type="number"
+                step="any"
                 placeholder="0.00"
                 className="h-12 rounded-2xl bg-background/50 border-primary/10 focus:ring-primary font-bold shadow-sm"
                 {...register("wholesalePrice", { required: true, min: 0 })}
@@ -203,6 +205,7 @@ const ProductDialog = ({ open, onOpenChange, productToEdit, onSuccess }: Product
               <Input
                 id="retailPrice"
                 type="number"
+                step="any"
                 placeholder="0.00"
                 className="h-12 rounded-2xl bg-background/50 border-green-500/10 focus:ring-green-500 font-bold shadow-sm"
                 {...register("retailPrice", { required: true, min: 0 })}
@@ -216,6 +219,7 @@ const ProductDialog = ({ open, onOpenChange, productToEdit, onSuccess }: Product
               <Input
                 id="stock"
                 type="number"
+                step="any"
                 placeholder="0"
                 className="h-12 rounded-2xl bg-background/50 border-primary/10 focus:ring-primary font-bold shadow-sm"
                 {...register("stock", { required: true, min: 0 })}

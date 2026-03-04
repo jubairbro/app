@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { Select } from "@/components/ui/select-native";
 
 interface Product {
   id: string;
@@ -71,6 +72,58 @@ const Sales = () => {
     };
     loadData();
   }, [toast]);
+
+  const addToCart = (product: Product, priceType: "retail" | "wholesale") => {
+    const existingIndex = cart.findIndex(item => item.id === product.id && item.priceType === priceType);
+    const salePrice = priceType === "retail" ? product.retailPrice : product.wholesalePrice;
+    
+    if (existingIndex > -1) {
+      const newCart = [...cart];
+      newCart[existingIndex].quantity += 1;
+      setCart(newCart);
+    } else {
+      setCart([...cart, { ...product, quantity: 1, priceType, salePrice }]);
+    }
+    toast({ title: "সফল", description: `${product.name} কার্টে যোগ করা হয়েছে`, type: "success" });
+  };
+
+  const removeFromCart = (id: string, priceType: "retail" | "wholesale") => {
+    setCart(cart.filter(item => !(item.id === id && item.priceType === priceType)));
+  };
+
+  const updateQuantity = (id: string, priceType: "retail" | "wholesale", delta: number) => {
+    const newCart = cart.map(item => {
+      if (item.id === id && item.priceType === priceType) {
+        const newQty = Math.max(0, item.quantity + delta);
+        // Round to 2 decimal places
+        return { ...item, quantity: Math.round(newQty * 100) / 100 };
+      }
+      return item;
+    }).filter(item => item.quantity > 0);
+    setCart(newCart);
+  };
+
+  const handleQuantityChange = (id: string, priceType: "retail" | "wholesale", value: string) => {
+    const newQty = parseFloat(value);
+    if (isNaN(newQty)) return;
+    
+    const newCart = cart.map(item => {
+      if (item.id === id && item.priceType === priceType) {
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    }).filter(item => item.quantity >= 0);
+    setCart(newCart);
+  };
+
+  const calculateTotal = () => {
+    return cart.reduce((total, item) => total + (item.salePrice * item.quantity), 0);
+  };
+
+  const filteredCustomers = customers.filter(c => 
+    c.name.toLowerCase().includes(customerSearch.toLowerCase()) || 
+    c.phone.includes(customerSearch)
+  );
 
   const selectedCustomer = customers.find(c => c.id.toString() === selectedCustomerId);
 
@@ -172,7 +225,13 @@ const Sales = () => {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center bg-muted/50 rounded-xl p-1 border border-primary/5 shadow-inner">
                   <button onClick={() => updateQuantity(item.id, item.priceType, -1)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-card transition-all font-black text-primary">-</button>
-                  <span className="w-10 text-center text-sm font-black text-primary">{item.quantity}</span>
+                  <input 
+                    type="number"
+                    step="any"
+                    value={item.quantity}
+                    onChange={(e) => handleQuantityChange(item.id, item.priceType, e.target.value)}
+                    className="w-12 text-center text-sm font-black text-primary bg-transparent border-none focus:ring-0 p-0"
+                  />
                   <button onClick={() => updateQuantity(item.id, item.priceType, 1)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-card transition-all font-black text-primary">+</button>
                 </div>
                 
@@ -387,13 +446,19 @@ const Sales = () => {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">কাস্টমার খুঁজুন</Label>
+                    <Input 
+                      placeholder="নাম বা মোবাইল দিয়ে খুঁজুন..." 
+                      value={customerSearch}
+                      onChange={e => setCustomerSearch(e.target.value)}
+                      className="mb-2 h-10 rounded-xl bg-background/50 border-primary/10"
+                    />
                     <Select 
                       className="h-14 rounded-2xl bg-background/50 border-primary/10 font-bold focus:ring-primary shadow-sm"
                       value={selectedCustomerId}
                       onChange={(e) => setSelectedCustomerId(e.target.value)}
                     >
-                      <option value="">কাস্টমার সিলেক্ট করুন...</option>
-                      {customers.map(c => (
+                      <option value="">কাস্টমার সিলেক্ট করুন ({filteredCustomers.length})...</option>
+                      {filteredCustomers.map(c => (
                         <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
                       ))}
                     </Select>
@@ -438,11 +503,11 @@ const Sales = () => {
               <div className="grid grid-cols-2 gap-6 pt-4 border-t border-primary/5">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">ডিসকাউন্ট</Label>
-                  <Input className="h-14 rounded-2xl bg-background/50 border-accent/20 font-bold focus:ring-accent shadow-sm" type="number" value={discount} onChange={e => setDiscount(e.target.value)} placeholder="0.00" />
+                  <Input className="h-14 rounded-2xl bg-background/50 border-accent/20 font-bold focus:ring-accent shadow-sm" type="number" step="any" value={discount} onChange={e => setDiscount(e.target.value)} placeholder="0.00" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2 text-primary">জমা / পেমেন্ট</Label>
-                  <Input className="h-14 rounded-2xl bg-primary/5 border-primary/20 font-black focus:ring-primary text-primary shadow-inner" type="number" value={paidAmount} onChange={e => setPaidAmount(e.target.value)} placeholder="৳ 0.00" />
+                  <Input className="h-14 rounded-2xl bg-primary/5 border-primary/20 font-black focus:ring-primary text-primary shadow-inner" type="number" step="any" value={paidAmount} onChange={e => setPaidAmount(e.target.value)} placeholder="৳ 0.00" />
                 </div>
               </div>
             </div>

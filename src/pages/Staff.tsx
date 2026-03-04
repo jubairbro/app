@@ -16,7 +16,8 @@ import {
   UserCog,
   Shield,
   Activity,
-  UserX
+  UserX,
+  Calendar
 } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { motion, AnimatePresence } from "motion/react";
@@ -25,6 +26,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select-native";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { cn } from "@/lib/utils";
 
 interface StaffMember {
   id: number;
@@ -272,7 +274,5 @@ const Staff = () => {
     </div>
   );
 };
-
-const cn = (...classes: any[]) => classes.filter(Boolean).join(' ');
 
 export default Staff;
