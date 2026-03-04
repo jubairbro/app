@@ -52,30 +52,35 @@ const Memos = () => {
     setIsDownloading(true);
     try {
       const element = componentRef.current;
-      // Using a slightly delayed execution to ensure images and fonts are rendered
-      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Load fonts or wait for them
+      await document.fonts.ready;
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const canvas = await (html2canvas as any)(element, {
-        scale: 2,
+        scale: 2, // 2 is enough for good quality and keeps file size reasonable
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        allowTaint: false, // allowTaint can sometimes break useCORS
-        proxy: window.location.origin
+        allowTaint: false,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        windowWidth: document.documentElement.offsetWidth,
+        windowHeight: document.documentElement.offsetHeight
       });
       
-      const imgData = canvas.toDataURL("image/png", 1.0);
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
-        format: "a4"
+        format: "a5",
+        putOnlyUsedFonts: true
       });
       
-      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
       pdf.save(`Memo_${selectedSale.id}.pdf`);
       toast({ title: "সফল", description: "মেমো ডাউনলোড সম্পন্ন হয়েছে", type: "success" });
     } catch (error) {

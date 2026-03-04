@@ -18,6 +18,7 @@ import {
   Pie
 } from "recharts";
 import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
 import { 
   TrendingUp, 
   Calendar, 

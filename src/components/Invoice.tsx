@@ -30,60 +30,63 @@ interface InvoiceProps {
 
 export const Invoice = React.forwardRef<HTMLDivElement, InvoiceProps>(({ sale }, ref) => {
   return (
-    <div ref={ref} className="p-10 bg-white text-black font-sans max-w-[800px] mx-auto border-2 border-primary/20 shadow-none print:m-0 print:p-8" style={{ minHeight: '11in' }}>
+    <div ref={ref} className="p-6 bg-white text-black max-w-[600px] mx-auto border-2 border-black shadow-none print:m-0" 
+         style={{ 
+           fontFamily: "'Times New Roman', 'Hind Siliguri', serif",
+           minHeight: '8.27in', // A5 height approximately in proportion
+           width: '100%'
+         }}>
       {/* Header Section */}
-      <div className="text-center border-b-4 border-double border-primary pb-4 mb-8">
-        <h1 className="text-5xl font-black text-primary mb-2" style={{ fontFamily: 'SutonnyMJ, Arial, sans-serif' }}>মেসার্স সৈকত মেশিনারি</h1>
-        <p className="text-lg font-bold text-gray-800">প্রোঃ মোঃ বজলুর রশিদ (ভুট্টু)</p>
-        <div className="flex justify-center gap-6 text-sm font-bold text-gray-600 mt-2">
-          <span>রানীর হাট, তারাশ, সিরাজগঞ্জ</span>
-          <span className="text-primary">●</span>
-          <span>মোবাইল: 01737-975525, 01303-912781</span>
+      <div className="text-center border-b-2 border-black pb-3 mb-6">
+        <h1 className="text-4xl font-extrabold mb-1" style={{ color: '#000' }}>মেসার্স সৈকত মেশিনারি</h1>
+        <p className="text-md font-bold">প্রোঃ মোঃ বজলুর রশিদ (ভুট্টু)</p>
+        <div className="text-xs font-bold mt-1">
+          রানীর হাট, তারাশ, সিরাজগঞ্জ । মোবাইল: 01737-975525
         </div>
       </div>
 
       {/* Invoice Details */}
-      <div className="flex justify-between items-start mb-8 text-base">
+      <div className="flex justify-between items-start mb-6 text-sm">
         <div className="space-y-1">
-          <p><span className="font-black border-b border-dotted">নাম:</span> <span className="ml-2 font-bold">{sale.customerName}</span></p>
-          <p><span className="font-black border-b border-dotted">মোবাইল:</span> <span className="ml-2">{sale.customerPhone}</span></p>
-          <p><span className="font-black border-b border-dotted">ঠিকানা:</span> <span className="ml-2">{sale.customerAddress || "N/A"}</span></p>
+          <p><strong>নাম:</strong> {sale.customerName}</p>
+          <p><strong>মোবাইল:</strong> {sale.customerPhone}</p>
+          <p><strong>ঠিকানা:</strong> {sale.customerAddress || "N/A"}</p>
         </div>
         <div className="text-right space-y-1">
-          <p className="bg-gray-100 px-3 py-1 rounded-lg inline-block font-black border border-gray-300">ভাউচার নং: {sale.id}</p>
-          <p className="font-bold">তারিখ: {sale.createdAt ? formatDate(new Date(sale.createdAt)) : formatDate(new Date())}</p>
+          <p className="border border-black px-2 py-0.5 inline-block font-bold">মেমো নং: {sale.id}</p>
+          <p><strong>তারিখ:</strong> {sale.createdAt ? formatDate(new Date(sale.createdAt)) : formatDate(new Date())}</p>
         </div>
       </div>
 
       {/* Product Table */}
-      <table className="w-full text-base border-collapse border-2 border-black mb-8">
+      <table className="w-full text-sm border-collapse border border-black mb-6">
         <thead>
-          <tr className="bg-primary/5 text-primary">
-            <th className="border-2 border-black px-4 py-3 text-center w-12 font-black">নং</th>
-            <th className="border-2 border-black px-4 py-3 text-left font-black">মালের বিবরণ</th>
-            <th className="border-2 border-black px-4 py-3 text-center w-24 font-black">পরিমাণ</th>
-            <th className="border-2 border-black px-4 py-3 text-right w-28 font-black">দর (৳)</th>
-            <th className="border-2 border-black px-4 py-3 text-right w-32 font-black">মোট (৳)</th>
+          <tr className="bg-gray-100">
+            <th className="border border-black px-2 py-2 text-center w-10">নং</th>
+            <th className="border border-black px-2 py-2 text-left">বিবরণ</th>
+            <th className="border border-black px-2 py-2 text-center w-16">পরিমাণ</th>
+            <th className="border border-black px-2 py-2 text-right w-20">দর</th>
+            <th className="border border-black px-2 py-2 text-right w-24">মোট টাকা</th>
           </tr>
         </thead>
-        <tbody style={{ minHeight: '400px' }}>
+        <tbody>
           {sale.items.map((item, index) => (
-            <tr key={index} className="hover:bg-gray-50">
-              <td className="border-2 border-black px-4 py-2 text-center font-bold">{index + 1}</td>
-              <td className="border-2 border-black px-4 py-2 font-bold">{item.name} <span className="text-xs text-gray-500">({item.unit})</span></td>
-              <td className="border-2 border-black px-4 py-2 text-center">{item.quantity}</td>
-              <td className="border-2 border-black px-4 py-2 text-right">{item.salePrice.toLocaleString()}</td>
-              <td className="border-2 border-black px-4 py-2 text-right font-bold">{(item.salePrice * item.quantity).toLocaleString()}</td>
+            <tr key={index}>
+              <td className="border border-black px-2 py-1.5 text-center">{index + 1}</td>
+              <td className="border border-black px-2 py-1.5 font-bold">{item.name}</td>
+              <td className="border border-black px-2 py-1.5 text-center">{item.quantity} {item.unit}</td>
+              <td className="border border-black px-2 py-1.5 text-right">{item.salePrice.toLocaleString()}</td>
+              <td className="border border-black px-2 py-1.5 text-right font-bold">{(item.salePrice * item.quantity).toLocaleString()}</td>
             </tr>
           ))}
-          {/* Fill empty rows to maintain height if needed */}
-          {[...Array(Math.max(0, 8 - sale.items.length))].map((_, i) => (
-            <tr key={`empty-${i}`} className="h-10">
-              <td className="border-2 border-black px-4 py-2"></td>
-              <td className="border-2 border-black px-4 py-2"></td>
-              <td className="border-2 border-black px-4 py-2"></td>
-              <td className="border-2 border-black px-4 py-2"></td>
-              <td className="border-2 border-black px-4 py-2"></td>
+          {/* Fill empty rows */}
+          {[...Array(Math.max(0, 10 - sale.items.length))].map((_, i) => (
+            <tr key={`empty-${i}`} className="h-8">
+              <td className="border border-black px-2 py-1.5"></td>
+              <td className="border border-black px-2 py-1.5"></td>
+              <td className="border border-black px-2 py-1.5"></td>
+              <td className="border border-black px-2 py-1.5"></td>
+              <td className="border border-black px-2 py-1.5"></td>
             </tr>
           ))}
         </tbody>
@@ -91,41 +94,40 @@ export const Invoice = React.forwardRef<HTMLDivElement, InvoiceProps>(({ sale },
 
       {/* Summary Section */}
       <div className="flex justify-between items-start">
-        <div className="w-1/2">
-          <p className="italic text-sm font-bold text-gray-500">কথায়: ................................................................................</p>
-          <div className="mt-16 flex gap-20">
-            <div className="border-t-2 border-black pt-1 px-4 text-sm font-black text-center">গ্রহীতার স্বাক্ষর</div>
-            <div className="border-t-2 border-black pt-1 px-4 text-sm font-black text-center">বিক্রেতার স্বাক্ষর</div>
+        <div className="w-1/2 mt-4">
+          <div className="mt-16 flex gap-10">
+            <div className="border-t border-black pt-1 text-xs font-bold w-24 text-center">গ্রহীতার স্বাক্ষর</div>
+            <div className="border-t border-black pt-1 text-xs font-bold w-24 text-center">বিক্রেতার স্বাক্ষর</div>
           </div>
         </div>
         
-        <div className="w-64">
-          <div className="flex justify-between py-2 border-b-2 border-black font-bold">
+        <div className="w-48 text-sm">
+          <div className="flex justify-between py-1 border-b border-black">
             <span>মোট বিল:</span>
-            <span>৳ {sale.totalAmount.toLocaleString()}</span>
+            <span className="font-bold">{sale.totalAmount.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between py-2 border-b-2 border-black text-red-600 font-bold">
+          <div className="flex justify-between py-1 border-b border-black">
             <span>ডিসকাউন্ট:</span>
-            <span>- ৳ {sale.discount.toLocaleString()}</span>
+            <span className="font-bold">(-) {sale.discount.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between py-2 border-b-2 border-black bg-gray-100 font-black text-xl">
+          <div className="flex justify-between py-1 border-b border-black bg-gray-50">
             <span>নিট বিল:</span>
-            <span>৳ {sale.finalAmount.toLocaleString()}</span>
+            <span className="font-bold">{sale.finalAmount.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between py-2 border-b-2 border-black font-bold text-green-700">
+          <div className="flex justify-between py-1 border-b border-black">
             <span>জমা:</span>
-            <span>৳ {sale.paidAmount.toLocaleString()}</span>
+            <span className="font-bold">{sale.paidAmount.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between py-2 font-black text-red-600 text-lg">
+          <div className="flex justify-between py-1 font-bold">
             <span>বাকি:</span>
-            <span>৳ {sale.dueAmount.toLocaleString()}</span>
+            <span className="text-red-600">{sale.dueAmount.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
       {/* Footer Info */}
-      <div className="mt-12 text-center text-xs font-bold text-gray-400 border-t pt-4">
-        বিঃ দ্রঃ- বিক্রিত মাল ফেরত নেওয়া হয় না। আমাদের এখানে যাবতীয় পার্টস ও মবিল পাইকারি ও খুচরা বিক্রয় করা হয়।
+      <div className="mt-10 text-center text-[10px] font-bold border-t border-black pt-2 italic">
+        * বিক্রিত মাল ফেরত নেওয়া হয় না। ধন্যবাদ আবার আসবেন। *
       </div>
     </div>
   );
