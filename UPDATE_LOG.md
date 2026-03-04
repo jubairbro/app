@@ -21,4 +21,4 @@
 - **Customer Listing:** Customers are now sorted alphabetically for better navigation.
 
 ---
-*Updated by Gemini CLI*
+*Updated by @Jubairbro**

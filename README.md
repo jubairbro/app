@@ -94,4 +94,4 @@ RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
 *দ্রষ্টব্য: শেয়ারড হোস্টিং-এ Python App রান করতে সমস্যা হলে আপনার হোস্টিং প্রোভাইডারের সাথে যোগাযোগ করুন এবং নিশ্চিত করুন যে তারা WSGI/ASGI সাপোর্ট করে।*
 
 ---
-*Developed by Gemini CLI for Saikat Machinery Enterprise.*
+*Developed by @Jubairbro for Saikat Machinery Enterprise.*
