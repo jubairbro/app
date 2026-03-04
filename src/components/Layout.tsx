@@ -74,12 +74,15 @@ const Layout = () => {
           {/* Marquee */}
           <div className="bg-primary text-primary-foreground py-2 overflow-hidden whitespace-nowrap shadow-inner border-b border-white/5">
             <div className="animate-marquee inline-block">
-              <span className="mx-12 font-bold text-sm tracking-wide">বিসমিল্লাহ স্টোর - আপনার বিশ্বস্ত প্রতিষ্ঠান</span>
-              <span className="mx-12 text-accent">✦</span>
-              <span className="mx-12 font-bold text-sm tracking-wide">মেসার্স সৈকত মেশিনারি - প্রোঃ মোঃ বজলুর রশিদ</span>
-              <span className="mx-12 text-accent">✦</span>
-              <span className="mx-12 font-bold text-sm tracking-wide">যেকোনো প্রয়োজনে যোগাযোগ করুন: 017xxxxxxxx</span>
+               <span className="mx-12 font-bold text-sm tracking-wide">বিসমিল্লাহির রাহমানির রাহিম</span>
+               <span className="mx-12 text-accent">●</span>
+               <span className="mx-12 font-bold text-sm tracking-wide">আসসালামু আলাইকুম</span>
+               <span className="mx-12 text-accent">✦</span>
+               <span className="mx-12 font-bold text-sm tracking-wide">মেসার্স সৈকত মেশিনারি - প্রোঃ মোঃ বজলুর রশিদ (ভুট্টু)</span>
+               <span className="mx-12 text-accent">✦</span>
+               <span className="mx-12 font-bold text-sm tracking-wide">যেকোনো প্রয়োজনে যোগাযোগ করুন: 01737-975525, 01303-912781</span>
             </div>
+
           </div>
 
           {/* Top Bar */}
