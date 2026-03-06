@@ -90,7 +90,7 @@ const Dashboard = () => {
             transition={{ delay: idx * 0.1 }}
           >
             <Link to={stat.link} className="block group">
-              <Card className="h-full border-none shadow-2xl bg-card/40 backdrop-blur-xl overflow-hidden hover:bg-card/60 transition-all hover:-translate-y-2 duration-500 rounded-[2.5rem] border border-primary/5">
+              <Card className="h-full border-none shadow-2xl bg-card overflow-hidden hover:bg-card/80 transition-all hover:-translate-y-2 duration-500 rounded-[2.5rem] border border-border">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 p-8">
                   <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{stat.title}</CardTitle>
                   <div className={cn("p-3 rounded-2xl shadow-inner", stat.bg)}>
@@ -121,7 +121,7 @@ const Dashboard = () => {
           <CardContent className="p-8 space-y-4">
             {stats?.lowStockItems?.length > 0 ? (
               stats.lowStockItems.slice(0, 5).map((item: any) => (
-                <div key={item.id} className="flex items-center justify-between p-4 rounded-2xl bg-white/50 border border-danger/5 shadow-sm">
+                <div key={item.id} className="flex items-center justify-between p-4 rounded-2xl bg-background/50 border border-danger/5 shadow-sm">
                   <div>
                     <div className="text-sm font-black text-primary">{item.name}</div>
                     <div className="text-[10px] font-bold text-danger uppercase tracking-tighter">অবশিষ্ট: {item.stock} {item.unit}</div>
@@ -141,7 +141,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Staff Summary */}
-        <Card className="lg:col-span-2 border-none shadow-2xl bg-card/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-primary/5">
+        <Card className="lg:col-span-2 border-none shadow-2xl bg-card rounded-[2.5rem] overflow-hidden border border-border">
           <CardHeader className="p-8 border-b border-primary/5 flex flex-row items-center justify-between">
             <CardTitle className="text-lg font-black flex items-center gap-3">
               <UserCog className="h-5 w-5 text-accent" />
@@ -197,7 +197,7 @@ const Dashboard = () => {
               viewport={{ once: true }}
               transition={{ delay: idx * 0.05 }}
             >
-              <Card className="overflow-hidden h-full flex flex-col group hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all duration-500 border-none bg-card/30 backdrop-blur-xl rounded-[2.5rem] border border-primary/5">
+              <Card className="overflow-hidden h-full flex flex-col group hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all duration-500 border-none bg-card rounded-[2.5rem] border border-border">
                 <div className="h-36 w-full bg-muted flex items-center justify-center relative overflow-hidden border-b border-primary/5">
                   {product.imageUrl ? (
                     <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer" />

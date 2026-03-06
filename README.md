@@ -7,7 +7,7 @@
 - **ড্যাশবোর্ড (Dashboard):** ব্যবসার বর্তমান অবস্থা, মোট বিক্রয়, বাকি এবং লো-স্টক পণ্যের সংক্ষিপ্ত রূপরেখা।
 - **ইনভেন্টরি ম্যানেজমেন্ট (Inventory):** পণ্যের স্টক যোগ, এডিট, ডিলিট এবং ক্যাটাগরি অনুযায়ী ম্যানেজ করা।
 - **সেলস (POS System):** কাস্টমার ম্যানেজমেন্টসহ উন্নত চেকআউট সিস্টেম। বিক্রয় শেষে সাথে সাথে প্রফেশনাল বাংলা মেমো জেনারেশন।
-- **মেমো তালিকা (Memos):** সকল পুরাতন বিক্রয়ের রেকর্ড দেখা, পুনরায় প্রিন্ট করা এবং PDF ডাউনলোড।
+- **মেমো তালিকা (Memos):** সকল পুরাতন বিক্রয়ের রেকর্ড দেখা এবং দেশীয় ব্রাউজার প্রিন্ট সাপোর্ট।
 - **বাকি খাতা (Due Book):** কাস্টমারদের দেনা-পাওনার নিখুঁত হিসাব ও পেমেন্ট হিস্ট্রি।
 - **খরচের খাতা (Expenses):** ব্যবসার দৈনিক খরচের হিসাব রাখা।
 - **সাপ্লায়ার ম্যানেজমেন্ট (Suppliers):** সাপ্লায়ারদের ডাটা এবং পেমেন্ট ব্যালেন্স ট্র্যাক করা।
@@ -19,83 +19,51 @@
 
 - **Frontend:** React (TypeScript), Vite, Tailwind CSS, Lucide React, Framer Motion.
 - **Backend:** Python, FastAPI, SQLAlchemy.
-- **Database:** SQLite (Relational Database).
-- **PDF Engine:** jsPDF & html2canvas.
+- **Database:** PostgreSQL (via Vercel/Supabase) অথবা SQLite.
+- **Deployment:** Vercel (Serverless Functions & Static UI).
 
-## সেটআপ ইনস্ট্রাকশন (Setup Instructions)
-
-এই প্রজেক্টটি লোকাল এনভায়রনমেন্টে চালানোর জন্য নিচের ধাপগুলো অনুসরণ করুন:
-
-### ১. ব্যাকএন্ড সেটআপ
-```bash
-# পাইথন ভার্চুয়াল এনভায়রনমেন্ট তৈরি করুন
-python3 -m venv venv
-source venv/bin/activate
-
-# প্রয়োজনীয় ডিপেন্ডেন্সি ইনস্টল করুন (সঠিক ভার্সনসহ)
-pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] pydantic-settings python-multipart jinja2 email-validator bcrypt==4.0.1
-
-# ব্যাকএন্ড সার্ভার চালু করুন
-python3 main.py
-```
-
-### ২. ফ্রন্টএন্ড সেটআপ
-```bash
-# নোড মডিউল ইনস্টল করুন
-npm install
-
-# ডেভেলপমেন্ট মোডে রান করুন
-npm run dev
-
-# প্রোডাকশন বিল্ড তৈরি করুন
-npm run build
-```
-
-## এনভায়রনমেন্ট কনফিগারেশন
-প্রজেক্টটি চালানোর জন্য ডিফল্টভাবে `main.py` এ ডাটাবেজ এবং সিক্রেট কি সেট করা আছে। আপনি চাইলে `main.py` এর কনফিগারেশন সেকশন থেকে `SECRET_KEY` পরিবর্তন করতে পারেন।
-
-## অ্যাডমিন এক্সেস (Default Admin)
+## ডিফল্ট অ্যাডমিন লগইন
 - **ইমেইল:** `admin@saikat.com`
 - **পাসওয়ার্ড:** `@Admin123`
 
-## শেয়ারড হোস্টিং (cPanel/DirectAdmin) সেটআপ গাইড
+---
 
-এই প্রজেক্টটি শেয়ারড হোস্টিং-এ (যেমন: cPanel বা DirectAdmin) সফলভাবে হোস্ট করার জন্য নিচের ধাপগুলো অনুসরণ করুন:
+## 🚀 Vercel এ ডেপ্লয় করার নিয়ম
 
-### ১. Python App সেটআপ (cPanel)
-- আপনার cPanel ড্যাশবোর্ড থেকে **'Setup Python App'** অপশনে যান।
-- **'Create Application'** বাটনে ক্লিক করুন।
-- **Python Version:** ৩.১০ বা তার বেশি নির্বাচন করুন।
-- **Application root:** আপনার প্রজেক্ট ফোল্ডারের নাম দিন (যেমন: `app`)।
-- **Application URL:** আপনার সাবডোমেইন বা ডোমেইন নির্বাচন করুন।
-- **Application startup file:** `main.py` দিন।
-- **Entry point:** `app` (FastAPI instance)।
+এই প্রজেক্টটি Vercel-এর ফ্রি টায়ারে হোস্ট করার জন্য সম্পূর্ণভাবে প্রস্তুত করা হয়েছে। 
 
-### ২. ডিপেন্ডেন্সি ইনস্টল করা
-- Python App সেভ করার পর, স্ক্রিনের উপরে দেওয়া কমান্ডটি কপি করুন (যেমন: `source /home/user/virtualenv/app/3.10/bin/activate && cd /home/user/app`)।
-- আপনার কম্পিউটারের টার্মিনাল বা cPanel-এর **'Terminal'** অপশন থেকে ওই কমান্ডটি রান করুন।
-- এরপর নিচের কমান্ডটি দিয়ে সব লাইব্রেরি ইনস্টল করুন:
-  ```bash
-  pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] pydantic-settings python-multipart jinja2 email-validator bcrypt==4.0.1
-  ```
+### ধাপ ১: Vercel Postgres ডাটাবেজ তৈরি করা
+১. আপনার Vercel অ্যাকাউন্টে লগইন করুন।
+২. "Storage" ট্যাবে গিয়ে **Create Database** এ ক্লিক করে একটি ফ্রি "Postgres" ডাটাবেজ তৈরি করুন।
+৩. ডাটাবেজ তৈরি হওয়ার পর, সেটিংসে গিয়ে এটি আপনার প্রজেক্টের সাথে `Connect` করুন।
 
-### ৩. ফ্রন্টএন্ড বিল্ড আপলোড করা
-- আপনার লোকাল কম্পিউটারে `npm run build` কমান্ডটি রান করুন।
-- এরপর তৈরি হওয়া `dist` ফোল্ডারের ভেতরের সব ফাইল হোস্টিং-এর প্রজেক্ট ফোল্ডারে (যেখানে `main.py` আছে) আপলোড করুন।
+### ধাপ ২: প্রজেক্ট ডেপ্লয় করা
+১. GitHub থেকে এই রিপোজিটরিটি Vercel এ ইম্পোর্ট করুন।
+২. Vercel স্বয়ংক্রিয়ভাবে `POSTGRES_URL` এনভায়রনমেন্ট ভেরিয়েবল পেয়ে যাবে।
+৩. Deploy বাটনে ক্লিক করুন। 
 
-### ৪. ডাটাবেজ ও ফোল্ডার পারমিশন
-- প্রজেক্ট ডিরেক্টরিতে `data` এবং `uploads` নামে দুটি ফোল্ডার তৈরি করুন।
-- ফোল্ডার দুটির পারমিশন `755` বা প্রয়োজনে `777` করে দিন যাতে SQLite ডাটাবেজ এবং ইমেজ আপলোড কাজ করে।
-
-### ৫. .htaccess কনফিগারেশন (Apache-এর জন্য)
-যদি আপনার হোস্টিং Apache ব্যবহার করে, তবে `public_html` বা প্রজেক্টের রুট ফোল্ডারে একটি `.htaccess` ফাইল তৈরি করে নিচের কোডটি দিন (পোর্ট ৩০০০ বা আপনার পাইথন অ্যাপের পোর্ট অনুযায়ী):
-```apache
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
-```
-
-*দ্রষ্টব্য: শেয়ারড হোস্টিং-এ Python App রান করতে সমস্যা হলে আপনার হোস্টিং প্রোভাইডারের সাথে যোগাযোগ করুন এবং নিশ্চিত করুন যে তারা WSGI/ASGI সাপোর্ট করে।*
+### ধাপ ৩: ডাটা মাইগ্রেশন (ঐচ্ছিক)
+যদি আপনি লোকাল SQLite থেকে পুরোনো ডাটা Vercel এর লাইভ সার্ভারে নিতে চান, তাহলে ডেপ্লয় শেষ হওয়ার পর ব্রাউজারে নিচের লিংকে যান:
+`https://আপনার-লাইভ-সাইট.vercel.app/api/migrate-data?secret=saikat123`
 
 ---
-*Developed by @Jubairbro for Saikat Machinery Enterprise.*
+
+## লোকাল এনভায়রনমেন্টে চালানোর নিয়ম (Local Setup)
+
+```bash
+# ১. পাইথন ভার্চুয়াল এনভায়রনমেন্ট তৈরি করুন
+python3 -m venv venv
+source venv/bin/activate
+
+# ২. প্রয়োজনীয় ডিপেন্ডেন্সি ইনস্টল করুন
+pip install -r requirements.txt
+
+# ৩. নোড মডিউল ইনস্টল করুন
+npm install
+
+# ৪. ডেভেলপমেন্ট সার্ভার চালু করুন (Frontend + Backend একসাথে)
+npm run dev & python3 main.py
+```
+
+---
+*Developed with ❤️ for Saikat Machinery Enterprise.*

@@ -30,10 +30,12 @@ interface InvoiceProps {
 
 export const Invoice = React.forwardRef<HTMLDivElement, InvoiceProps>(({ sale }, ref) => {
   return (
-    <div ref={ref} data-invoice-container="true" className="p-6 bg-white text-black mx-auto border-2 border-black shadow-none print:m-0 w-full sm:w-[600px] min-w-[320px] sm:min-w-[600px] overflow-hidden" 
+    <div ref={ref} data-invoice-container="true" className="p-6 bg-white text-black mx-auto border-2 border-black shadow-none print:m-0 w-full sm:w-[600px] min-w-[320px] sm:min-w-[600px] overflow-hidden !bg-white !text-black" 
          style={{ 
            fontFamily: "'Noto Sans Bengali', 'Hind Siliguri', sans-serif",
            minHeight: '8.27in', // A5 height approximately in proportion
+           color: '#000',
+           backgroundColor: '#fff'
          }}>
       {/* Header Section */}
       <div className="text-center border-b-2 border-black pb-3 mb-6">

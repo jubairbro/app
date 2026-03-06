@@ -196,7 +196,7 @@ const DueBook = () => {
         />
       </div>
 
-      <Card className="border-none shadow-2xl bg-card/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden">
+      <Card className="border-none shadow-2xl bg-card rounded-[2.5rem] overflow-hidden border border-border">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[800px] text-sm text-left">

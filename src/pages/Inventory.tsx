@@ -75,7 +75,7 @@ const Inventory = () => {
 
   return (
     <div className="space-y-8 pb-10">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-card/40 backdrop-blur-md p-6 rounded-3xl border border-primary/5 shadow-xl">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-card backdrop-blur-md p-6 rounded-3xl border border-border shadow-xl">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -151,7 +151,7 @@ const Inventory = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border-none shadow-2xl bg-card/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-primary/5">
+            <Card className="border-none shadow-2xl bg-card rounded-[2.5rem] overflow-hidden border border-border">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[800px] text-sm text-left">
@@ -276,7 +276,7 @@ const Inventory = () => {
                 transition={{ delay: idx * 0.05 }}
                 whileHover={{ y: -8 }}
               >
-                <Card className="overflow-hidden h-full flex flex-col group hover:shadow-2xl transition-all duration-300 border-none bg-card/40 backdrop-blur-md rounded-[2rem] border border-primary/5">
+                <Card className="overflow-hidden h-full flex flex-col group hover:shadow-2xl transition-all duration-300 border-none bg-card rounded-[2rem] border border-border">
                   <div className="h-40 w-full bg-muted flex items-center justify-center relative overflow-hidden border-b border-primary/5">
                     {product.imageUrl ? (
                       <img 

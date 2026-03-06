@@ -59,15 +59,15 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   ];
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-primary text-primary-foreground relative shadow-2xl border-r border-white/5">
-      <div className="flex flex-col items-center justify-center h-32 border-b border-primary-foreground/10 px-4 text-center bg-primary-foreground/5 relative">
+    <div className="flex h-screen w-64 flex-col bg-card border-r border-border relative shadow-2xl z-50">
+      <div className="flex flex-col items-center justify-center h-32 border-b border-border px-4 text-center bg-muted/20 relative">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-xl font-black text-accent drop-shadow-lg tracking-tight">মেসার্স সৈকত মেশিনারি</h1>
-          <p className="text-[10px] text-primary-foreground/60 mt-1 italic uppercase tracking-widest font-bold">ERP Enterprise</p>
+          <h1 className="text-xl font-black text-primary drop-shadow-sm tracking-tight">মেসার্স সৈকত মেশিনারি</h1>
+          <p className="text-[10px] text-muted-foreground mt-1 italic uppercase tracking-widest font-bold">ERP Enterprise</p>
         </motion.div>
       </div>
       
@@ -87,13 +87,13 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
                   cn(
                     "flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold transition-all duration-300 group relative overflow-hidden",
                     isActive
-                      ? "bg-accent text-accent-foreground shadow-lg shadow-accent/20 translate-x-1"
-                      : "hover:bg-white/5 hover:translate-x-1 text-primary-foreground/70 hover:text-white"
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 translate-x-1"
+                      : "hover:bg-muted/50 hover:translate-x-1 text-muted-foreground hover:text-primary"
                   )
                 }
               >
                 <item.icon className={cn(
-                  "h-5 w-5 transition-transform duration-300 group-hover:scale-110",
+                  "h-5 w-5 transition-all duration-300 group-hover:scale-110",
                   "group-active:scale-90"
                 )} />
                 {item.label}
@@ -103,15 +103,15 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
         </ul>
       </nav>
 
-      <div className="border-t border-primary-foreground/10 p-5 space-y-4 bg-primary-foreground/5">
+      <div className="border-t border-border p-5 space-y-4 bg-muted/10">
         {role ? (
           <>
-            <div className="flex items-center gap-3 px-2 text-left">
-              <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-                <User className="h-6 w-6 text-accent" />
+            <div className="flex items-center gap-3 px-2 text-left text-primary">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                <User className="h-6 w-6 text-primary" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase text-accent leading-none tracking-widest">{isAdmin ? "Admin" : "Staff"}</span>
+                <span className="text-[10px] font-black uppercase text-muted-foreground leading-none tracking-widest">{isAdmin ? "Admin" : "Staff"}</span>
                 <span className="text-xs font-bold truncate max-w-[120px]">{user?.name || "মোঃ বজলুর রশিদ"}</span>
               </div>
             </div>
@@ -119,7 +119,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setIsLogoutConfirmOpen(true)}
-              className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-black text-white bg-danger shadow-lg shadow-danger/20 hover:bg-danger/90 transition-all border border-white/10"
+              className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-black text-danger bg-danger/10 shadow-sm hover:bg-danger hover:text-white transition-all border border-danger/20"
             >
               <LogOut className="h-5 w-5" />
               লগআউট করুন
@@ -130,7 +130,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate('/login')}
-            className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-black text-primary-foreground bg-primary-foreground/10 hover:bg-primary-foreground/20 transition-all border border-primary-foreground/20"
+            className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-black text-primary bg-primary/10 hover:bg-primary/20 transition-all border border-primary/20"
           >
             <ShieldCheck className="h-5 w-5" />
             লগইন করুন

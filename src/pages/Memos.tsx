@@ -221,7 +221,7 @@ const Memos = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="p-2 sm:p-10 bg-muted/20"
               >
-                <div className="shadow-2xl rounded-sm overflow-x-auto bg-white border border-black/5 mx-auto w-full">
+                <div className="shadow-2xl rounded-sm overflow-x-auto bg-card border border-border mx-auto w-full">
                   <Invoice ref={componentRef} sale={selectedSale} />
                 </div>
                 

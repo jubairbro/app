@@ -354,7 +354,7 @@ const Sales = () => {
     <div className="flex flex-col lg:flex-row h-[calc(100vh-8rem)] gap-6 relative">
       {/* Product List */}
       <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-        <div className="flex items-center gap-3 bg-card/40 backdrop-blur-md p-4 rounded-3xl border border-primary/5 shadow-lg">
+        <div className="flex items-center gap-3 bg-card backdrop-blur-md p-4 rounded-3xl border border-border shadow-lg">
           <div className="relative flex-1 group text-left">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input 
@@ -384,7 +384,7 @@ const Sales = () => {
                 whileHover={{ y: -5 }}
                 className="h-full"
               >
-                <Card className="overflow-hidden h-full flex flex-col group hover:shadow-2xl transition-all duration-300 border-none bg-card/40 backdrop-blur-sm rounded-[2rem] border border-primary/5">
+                <Card className="overflow-hidden h-full flex flex-col group hover:shadow-2xl transition-all duration-300 border-none bg-card rounded-[2rem] border border-border">
                   <div className="h-32 w-full bg-muted flex items-center justify-center overflow-hidden relative border-b border-primary/5">
                     {product.imageUrl ? (
                       <img 
@@ -723,7 +723,7 @@ const Sales = () => {
           </div>
           
           <div className="p-2 sm:p-10 bg-muted/20">
-            <div className="bg-white shadow-2xl rounded-sm overflow-x-auto border border-black/5 mx-auto w-full">
+            <div className="bg-card shadow-2xl rounded-sm overflow-x-auto border border-border mx-auto w-full">
               {lastSale && <Invoice ref={invoiceRef} sale={lastSale as any} />}
             </div>
             <div className="mt-10">
