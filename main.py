@@ -42,6 +42,13 @@ import urllib.parse
 def fix_db_url(url: str) -> str:
     if "://" not in url or "sqlite" in url: return url
     prefix, rest = url.split("://", 1)
+    
+    # Strip unsupported Vercel query params that break SQLAlchemy
+    if "&supa=" in rest:
+        rest = rest.split("&supa=")[0]
+    if "?supa=" in rest:
+        rest = rest.split("?supa=")[0]
+        
     if "@" in rest:
         auth, host_path = rest.rsplit("@", 1)
         if ":" in auth:
