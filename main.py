@@ -36,6 +36,22 @@ DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR}/data/database.sq
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+import urllib.parse
+def fix_db_url(url: str) -> str:
+    if "://" not in url or "sqlite" in url: return url
+    prefix, rest = url.split("://", 1)
+    if "@" in rest:
+        auth, host_path = rest.rsplit("@", 1)
+        if ":" in auth:
+            user, pwd = auth.split(":", 1)
+            user = urllib.parse.quote(urllib.parse.unquote(user))
+            pwd = urllib.parse.quote(urllib.parse.unquote(pwd))
+            auth = f"{user}:{pwd}"
+        rest = f"{auth}@{host_path}"
+    return f"{prefix}://{rest}"
+
+DATABASE_URL = fix_db_url(DATABASE_URL)
+
 DATA_DIR = BASE_DIR / "data"
 UPLOADS_DIR = BASE_DIR / "uploads"
 SECRET_KEY = "saikat_machinery_super_secret_key_v3_secure" # In production, use os.getenv("SECRET_KEY")
@@ -247,8 +263,8 @@ def startup_seeding():
         Base.metadata.create_all(bind=engine)
         db = SessionLocal()
         if not db.query(User).first():
-            hashed_pw = pwd_context.hash("1234")
-            db.add(User(name="Admin", email="admin@erp.com", hashed_password=hashed_pw, role="admin"))
+            hashed_pw = pwd_context.hash("@Admin123")
+            db.add(User(name="Admin", email="admin@saikat.com", hashed_password=hashed_pw, role="admin"))
             db.commit()
         db.close()
     except Exception as e:
