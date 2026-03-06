@@ -69,13 +69,24 @@ const Sales = () => {
     if (!invoiceRef.current || !lastSale) return;
     setIsDownloading(true);
     try {
-      const canvas = await (html2canvas as any)(invoiceRef.current, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const imgProps = pdf.getImageProperties(imgData);
+      const canvas = await (html2canvas as any)(invoiceRef.current, { 
+        scale: 2, 
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        windowWidth: 800,
+        onclone: (clonedDoc: Document) => {
+          const el = clonedDoc.querySelector('[data-invoice-container]') as HTMLElement;
+          if (el) {
+            el.style.width = '600px';
+            el.style.maxWidth = '600px';
+          }
+        }
+      });
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a5" });
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
       pdf.save(`Invoice_${lastSale.id}.pdf`);
     } catch (e) {
       toast({ title: "ব্যর্থ", description: "PDF তৈরি করা সম্ভব হয়নি", type: "error" });
@@ -520,7 +531,7 @@ const Sales = () => {
                     >
                       <option value="">কাস্টমার সিলেক্ট করুন ({filteredCustomers.length})...</option>
                       {filteredCustomers.map(c => (
-                        <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                        <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
                     </Select>
                   </div>
@@ -656,7 +667,7 @@ const Sales = () => {
           </div>
           
           <div className="p-10 bg-muted/20">
-            <div className="bg-white shadow-2xl rounded-sm overflow-hidden border border-black/5 mx-auto">
+            <div className="bg-white shadow-2xl rounded-sm overflow-x-auto border border-black/5 mx-auto w-full">
               {lastSale && <Invoice ref={invoiceRef} sale={lastSale as any} />}
             </div>
             <div className="mt-10">

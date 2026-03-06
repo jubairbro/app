@@ -67,7 +67,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           transition={{ duration: 0.5 }}
         >
           <h1 className="text-xl font-black text-accent drop-shadow-lg tracking-tight">মেসার্স সৈকত মেশিনারি</h1>
-          <p className="text-[10px] text-primary-foreground/60 mt-1 italic uppercase tracking-widest font-bold">ERP Enterprise v3.0</p>
+          <p className="text-[10px] text-primary-foreground/60 mt-1 italic uppercase tracking-widest font-bold">ERP Enterprise</p>
         </motion.div>
         
         {onClose && (

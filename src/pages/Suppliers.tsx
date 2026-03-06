@@ -180,10 +180,6 @@ const Suppliers = () => {
                       <div className="p-2 bg-muted/50 rounded-lg"><User className="h-3 w-3" /></div>
                       {supplier.contactPerson || "কন্টাক্ট পারসন নেই"}
                     </div>
-                    <div className="flex items-center gap-3 text-sm font-black text-primary">
-                      <div className="p-2 bg-primary/5 rounded-lg text-primary"><PhoneCall className="h-3 w-3" /></div>
-                      {supplier.phone}
-                    </div>
                     <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
                       <div className="p-2 bg-muted/50 rounded-lg"><MapPin className="h-3 w-3" /></div>
                       {supplier.address || "ঠিকানা দেওয়া নেই"}

@@ -64,9 +64,15 @@ const Memos = () => {
         backgroundColor: "#ffffff",
         allowTaint: false,
         scrollX: 0,
-        scrollY: -window.scrollY,
-        windowWidth: document.documentElement.offsetWidth,
-        windowHeight: document.documentElement.offsetHeight
+        scrollY: 0,
+        windowWidth: 800,
+        onclone: (clonedDoc: Document) => {
+          const el = clonedDoc.querySelector('[data-invoice-container]') as HTMLElement;
+          if (el) {
+            el.style.width = '600px';
+            el.style.maxWidth = '600px';
+          }
+        }
       });
       
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
@@ -264,7 +270,7 @@ const Memos = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="p-6 sm:p-10 bg-muted/20"
               >
-                <div className="shadow-2xl rounded-sm overflow-hidden bg-white border border-black/5 mx-auto">
+                <div className="shadow-2xl rounded-sm overflow-x-auto bg-white border border-black/5 mx-auto w-full">
                   <Invoice ref={componentRef} sale={selectedSale} />
                 </div>
                 

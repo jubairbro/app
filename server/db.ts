@@ -34,7 +34,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS customers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
-    phone TEXT UNIQUE,
+    phone TEXT,
     address TEXT,
     totalDue REAL DEFAULT 0,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP

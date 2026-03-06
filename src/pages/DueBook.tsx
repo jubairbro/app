@@ -227,9 +227,6 @@ const DueBook = () => {
                     </td>
                     <td className="px-8 py-6">
                       <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors">
-                          <Phone className="h-3 w-3" /> {customer.phone}
-                        </div>
                         <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                           <MapPin className="h-3 w-3" /> {customer.address || "ঠিকানা নেই"}
                         </div>

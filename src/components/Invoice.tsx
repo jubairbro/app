@@ -30,18 +30,17 @@ interface InvoiceProps {
 
 export const Invoice = React.forwardRef<HTMLDivElement, InvoiceProps>(({ sale }, ref) => {
   return (
-    <div ref={ref} className="p-6 bg-white text-black max-w-[600px] mx-auto border-2 border-black shadow-none print:m-0" 
+    <div ref={ref} data-invoice-container="true" className="p-6 bg-white text-black mx-auto border-2 border-black shadow-none print:m-0 w-[600px] min-w-[600px] overflow-hidden" 
          style={{ 
-           fontFamily: "'Times New Roman', 'Hind Siliguri', serif",
+           fontFamily: "'Noto Sans Bengali', 'Hind Siliguri', sans-serif",
            minHeight: '8.27in', // A5 height approximately in proportion
-           width: '100%'
          }}>
       {/* Header Section */}
       <div className="text-center border-b-2 border-black pb-3 mb-6">
         <h1 className="text-4xl font-extrabold mb-1" style={{ color: '#000' }}>মেসার্স সৈকত মেশিনারি</h1>
         <p className="text-md font-bold">প্রোঃ মোঃ বজলুর রশিদ (ভুট্টু)</p>
         <div className="text-xs font-bold mt-1">
-          রানীর হাট, তারাশ, সিরাজগঞ্জ । মোবাইল: 01737-975525
+          রানীর হাট, তারাশ, সিরাজগঞ্জ । মোবাইল: 01740556280
         </div>
       </div>
 
