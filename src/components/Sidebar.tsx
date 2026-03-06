@@ -26,7 +26,7 @@ import { motion } from "motion/react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 const Sidebar = ({ onClose }: { onClose?: () => void }) => {
-  const { role, setUser } = useAuth();
+  const { user, role, setUser } = useAuth();
   const isAdmin = role === "admin";
   const navigate = useNavigate();
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
@@ -112,7 +112,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
               </div>
               <div className="flex flex-col">
                 <span className="text-[10px] font-black uppercase text-accent leading-none tracking-widest">{isAdmin ? "Admin" : "Staff"}</span>
-                <span className="text-xs font-bold truncate max-w-[120px]"> মোঃ বজলুর রশিদ</span>
+                <span className="text-xs font-bold truncate max-w-[120px]">{user?.name || "মোঃ বজলুর রশিদ"}</span>
               </div>
             </div>
             <motion.button
