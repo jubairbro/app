@@ -78,9 +78,9 @@ const Layout = () => {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Marquee & Header */}
-        <header className="bg-card/80 backdrop-blur-md border-b z-30 sticky top-0 shadow-sm">
+        <header className="bg-card/80 backdrop-blur-md border-b border-border z-30 sticky top-0 shadow-sm transition-colors duration-500">
           {/* Marquee */}
-          <div className="bg-primary text-primary-foreground py-2 overflow-hidden whitespace-nowrap shadow-inner border-b border-white/5">
+          <div className="bg-primary text-primary-foreground py-2 overflow-hidden whitespace-nowrap shadow-inner border-b border-primary/20 relative z-10">
             <div className="animate-marquee inline-block">
                <span className="mx-12 font-bold text-sm tracking-wide">বিসমিল্লাহির রাহমানির রাহিম</span>
                <span className="mx-12 text-accent">●</span>
