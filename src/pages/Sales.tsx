@@ -177,8 +177,8 @@ const Sales = () => {
   };
 
   const filteredCustomers = customers.filter(c => 
-    c.name.toLowerCase().includes(customerSearch.toLowerCase()) || 
-    c.phone.includes(customerSearch)
+    (c.name && c.name.toLowerCase().includes(customerSearch.toLowerCase())) || 
+    (c.phone && c.phone.includes(customerSearch))
   );
 
   const selectedCustomer = customers.find(c => c.id.toString() === selectedCustomerId);
@@ -251,9 +251,9 @@ const Sales = () => {
   };
 
   const filteredProducts = products.filter(p => 
-    (p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     p.id.toString().includes(searchTerm)) && 
+    ((p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) || 
+     (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase())) ||
+     (p.id && p.id.toString().includes(searchTerm))) && 
     p.stock > 0
   );
 

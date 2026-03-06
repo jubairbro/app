@@ -119,10 +119,10 @@ const Memos = () => {
   }, []);
 
   const filteredSales = sales.filter(sale => 
-    sale.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sale.customerPhone.includes(searchTerm) ||
+    (sale.customerName && sale.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (sale.customerPhone && sale.customerPhone.includes(searchTerm)) ||
     (sale.customerAddress && sale.customerAddress.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    sale.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    (sale.id && sale.id.toString().toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (

@@ -440,10 +440,10 @@ async def perform_sale(data: SaleCreate, user: User = Depends(get_current_user),
         c.totalDue += data.dueAmount
         if data.customerAddress: c.address = data.customerAddress
 
-        # Generate a purely numeric memo ID
-        # Format: YYMMDD + sequential number or random 4 digits (we use random 4 digits for simplicity while staying numeric)
-        import random
-        sid = f"{datetime.now().strftime('%y%m%d')}{random.randint(1000, 9999)}"
+        # Generate a purely numeric memo ID starting from 0001
+        last_id = db.execute(text("SELECT MAX(CAST(id AS INTEGER)) FROM sales WHERE id NOT GLOB '*[^0-9]*'")).scalar()
+        sid = str((last_id or 0) + 1).zfill(4)
+        
         sale = Sale(id=sid, customerId=c.id, customerName=c.name, customerPhone=c.phone, customerAddress=c.address, totalAmount=data.totalAmount, discount=data.discount, finalAmount=data.finalAmount, paidAmount=data.paidAmount, dueAmount=data.dueAmount, paymentMethod=data.paymentMethod)
         db.add(sale)
 
