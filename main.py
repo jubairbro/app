@@ -261,6 +261,7 @@ async def log_requests(request: Request, call_next):
 
 @app.on_event("startup")
 def startup_seeding():
+    # Only run table creation if we actually have a connection
     try:
         Base.metadata.create_all(bind=engine)
         db = SessionLocal()
@@ -270,7 +271,7 @@ def startup_seeding():
             db.commit()
         db.close()
     except Exception as e:
-        logger.error(f"Error creating tables: {e}")
+        logger.error(f"Startup DB Error: {e}")
 
 @app.get("/api/migrate-data")
 async def migrate_sqlite_to_postgres(secret: str):
@@ -363,20 +364,6 @@ async def migrate_sqlite_to_postgres(secret: str):
     db.commit()
     conn.close()
     return {"msg": "Migration successful"}
-def startup_seeding():
-    # Make sure tables exist in Postgres/SQLite
-    try:
-        Base.metadata.create_all(bind=engine)
-    except Exception as e:
-        logger.error(f"Error creating tables: {e}")
-
-    # Start FastAPI session to seed
-    db = SessionLocal()
-    if not db.query(User).filter(User.email == "admin@saikat.com").first():
-        db.add(User(name="Admin", email="admin@saikat.com", password=get_password_hash("@Admin123"), role="admin", status="active"))
-        db.commit()
-    db.close()
-
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global Error: {str(exc)}", exc_info=True)
@@ -423,8 +410,11 @@ async def get_products(db: Session = Depends(get_db)):
     return db.query(Product).order_by(Product.name).all()
 
 import base64
-from PIL import Image
 import io
+try:
+    from PIL import Image
+except ImportError:
+    pass # Pillow isn't available on all build servers, though we added it to requirements
 
 @app.post("/api/products")
 async def create_product(
