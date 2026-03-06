@@ -31,8 +31,10 @@ logger = logging.getLogger("SaikatERP")
 import os
 BASE_DIR = Path(__file__).resolve().parent
 
-# Support Supabase PostgreSQL or local SQLite
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR}/data/database.sqlite")
+# Support Supabase PostgreSQL, Vercel Postgres, or local SQLite
+db_url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL_NON_POOLING") or os.getenv("POSTGRES_URL")
+DATABASE_URL = db_url if db_url else f"sqlite:///{BASE_DIR}/data/database.sqlite"
+
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
