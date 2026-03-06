@@ -28,18 +28,26 @@ logging.basicConfig(
 logger = logging.getLogger("SaikatERP")
 
 # --- Configuration ---
+import os
 BASE_DIR = Path(__file__).resolve().parent
-DATABASE_URL = f"sqlite:///{BASE_DIR}/data/database.sqlite"
-UPLOADS_DIR = BASE_DIR / "uploads"
+
+# Support Supabase PostgreSQL or local SQLite
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR}/data/database.sqlite")
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 DATA_DIR = BASE_DIR / "data"
-SECRET_KEY = "saikat-super-secret-key-enterprise-edition"
+UPLOADS_DIR = BASE_DIR / "uploads"
+SECRET_KEY = "saikat_machinery_super_secret_key_v3_secure" # In production, use os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30
 
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# Supabase/Postgres doesn't need check_same_thread
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -232,48 +240,39 @@ async def log_requests(request: Request, call_next):
 
 @app.on_event("startup")
 def startup_seeding():
-    # Robust Migration using sqlite3 directly
-    import sqlite3
-    try:
-        conn = sqlite3.connect(DATABASE_URL.replace("sqlite:///", ""))
-        cursor = conn.cursor()
-        
-        # --- Migration for 'users' table ---
-        cursor.execute("PRAGMA table_info(users)")
-        u_columns = [column[1] for column in cursor.fetchall()]
-        if "name" not in u_columns:
-            cursor.execute("ALTER TABLE users ADD COLUMN name VARCHAR DEFAULT 'User'")
-        if "status" not in u_columns:
-            cursor.execute("ALTER TABLE users ADD COLUMN status VARCHAR DEFAULT 'active'")
+    # Only run sqlite migrations if we are using SQLite
+    if DATABASE_URL.startswith("sqlite"):
+        import sqlite3
+        try:
+            conn = sqlite3.connect(DATABASE_URL.replace("sqlite:///", ""))
+            cursor = conn.cursor()
             
-        # --- Migration for 'products' table ---
-        cursor.execute("PRAGMA table_info(products)")
-        p_columns = [column[1] for column in cursor.fetchall()]
-        if "sku" not in p_columns:
-            cursor.execute("ALTER TABLE products ADD COLUMN sku VARCHAR")
-        if "minStockLevel" not in p_columns:
-            cursor.execute("ALTER TABLE products ADD COLUMN minStockLevel INTEGER DEFAULT 10")
-        if "description" not in p_columns:
-            cursor.execute("ALTER TABLE products ADD COLUMN description TEXT")
-        # --- Migration for 'sales' table ---
-        cursor.execute("PRAGMA table_info(sales)")
-        s_columns = [column[1] for column in cursor.fetchall()]
-        if "paymentMethod" not in s_columns:
-            cursor.execute("ALTER TABLE sales ADD COLUMN paymentMethod VARCHAR DEFAULT 'cash'")
-        if "createdAt" not in s_columns:
-            cursor.execute("ALTER TABLE sales ADD COLUMN createdAt DATETIME")
+            # Check and add wholesalePrice and retailPrice to products if not exists
+            cursor.execute("PRAGMA table_info(products)")
+            columns = [info[1] for info in cursor.fetchall()]
+            if 'wholesalePrice' not in columns:
+                cursor.execute("ALTER TABLE products ADD COLUMN wholesalePrice FLOAT DEFAULT 0")
+            if 'retailPrice' not in columns:
+                cursor.execute("ALTER TABLE products ADD COLUMN retailPrice FLOAT DEFAULT 0")
             
-        # --- Migration for 'sale_items' table ---
-        cursor.execute("PRAGMA table_info(sale_items)")
-        si_columns = [column[1] for column in cursor.fetchall()]
-        if "purchasePriceAtSale" not in si_columns:
-            cursor.execute("ALTER TABLE sale_items ADD COLUMN purchasePriceAtSale FLOAT DEFAULT 0.0")
+            # Ensure priceType is in sale_items
+            cursor.execute("PRAGMA table_info(sale_items)")
+            columns = [info[1] for info in cursor.fetchall()]
+            if 'priceType' not in columns:
+                cursor.execute("ALTER TABLE sale_items ADD COLUMN priceType VARCHAR DEFAULT 'retail'")
             
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        logger.error(f"Migration Error: {e}")
+            # Add finalAmount to sales if not exists
+            cursor.execute("PRAGMA table_info(sales)")
+            columns = [info[1] for info in cursor.fetchall()]
+            if 'finalAmount' not in columns:
+                cursor.execute("ALTER TABLE sales ADD COLUMN finalAmount FLOAT DEFAULT 0")
+            
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            logger.error(f"Migration error: {e}")
 
+    # Start FastAPI session to seed
     db = SessionLocal()
     if not db.query(User).filter(User.email == "admin@saikat.com").first():
         db.add(User(name="Admin", email="admin@saikat.com", password=get_password_hash("@Admin123"), role="admin", status="active"))

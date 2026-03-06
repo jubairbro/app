@@ -106,8 +106,13 @@ const Layout = () => {
                     }
                   }}
                 >
-                  <Menu className={cn("h-6 w-6 absolute transition-all duration-300", (isMobileMenuOpen || (!isDesktopSidebarOpen && window.innerWidth >= 768)) ? "opacity-0 scale-50 rotate-90" : "opacity-100 scale-100 rotate-0")} />
-                  <X className={cn("h-6 w-6 absolute transition-all duration-300", (isMobileMenuOpen || (!isDesktopSidebarOpen && window.innerWidth >= 768)) ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 -rotate-90")} />
+                  {/* Mobile Icons */}
+                  <Menu className={cn("h-6 w-6 absolute transition-all duration-300 md:hidden", isMobileMenuOpen ? "opacity-0 scale-50 rotate-90" : "opacity-100 scale-100 rotate-0")} />
+                  <X className={cn("h-6 w-6 absolute transition-all duration-300 md:hidden", isMobileMenuOpen ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 -rotate-90")} />
+                  
+                  {/* Desktop Icons */}
+                  <Menu className={cn("h-6 w-6 absolute transition-all duration-300 hidden md:block", isDesktopSidebarOpen ? "opacity-0 scale-50 rotate-90" : "opacity-100 scale-100 rotate-0")} />
+                  <X className={cn("h-6 w-6 absolute transition-all duration-300 hidden md:block", isDesktopSidebarOpen ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 -rotate-90")} />
                 </Button>
               </motion.div>
               <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 bg-muted/40 rounded-full text-muted-foreground border border-muted-foreground/10">
