@@ -80,7 +80,7 @@ const Layout = () => {
         {/* Marquee & Header */}
         <header className="bg-card/80 backdrop-blur-md border-b border-border z-30 sticky top-0 shadow-sm transition-colors duration-500">
           {/* Marquee */}
-          <div className="bg-primary text-primary-foreground py-2 overflow-hidden whitespace-nowrap shadow-inner border-b border-primary/20 relative z-10">
+          <div className="bg-primary/90 text-primary-foreground py-2 overflow-hidden whitespace-nowrap shadow-inner border-b border-primary/20 relative z-10 backdrop-blur-sm">
             <div className="animate-marquee inline-block">
                <span className="mx-12 font-bold text-sm tracking-wide">বিসমিল্লাহির রাহমানির রাহিম</span>
                <span className="mx-12 text-accent">●</span>

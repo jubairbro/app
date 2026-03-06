@@ -59,7 +59,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   ];
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-card border-r border-border relative shadow-2xl z-50 transition-colors duration-500">
+    <div className="flex h-screen w-64 flex-col bg-card border-r border-border relative shadow-[4px_0_24px_rgba(0,0,0,0.05)] z-50 transition-colors duration-500">
       <div className="flex flex-col items-center justify-center h-32 border-b border-border px-4 text-center bg-muted/20 relative transition-colors duration-500">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}

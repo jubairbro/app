@@ -43,19 +43,19 @@
   }
 
   .dark {
-    --primary: #38bdf8;
+    --primary: #f8fafc;
     --primary-foreground: #0f172a;
     --accent: #fbbf24;
     --accent-foreground: #020617;
-    --background: #020617;
+    --background: #0f172a;
     --foreground: #f8fafc;
     --danger: #ef4444;
     --danger-foreground: #ffffff;
-    --muted: #1e293b;
+    --muted: #334155;
     --muted-foreground: #94a3b8;
-    --card: #0f172a;
+    --card: #1e293b;
     --card-foreground: #f8fafc;
-    --border: #1e293b;
+    --border: #334155;
   }
 
   body {
