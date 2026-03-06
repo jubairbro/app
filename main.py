@@ -240,37 +240,109 @@ async def log_requests(request: Request, call_next):
 
 @app.on_event("startup")
 def startup_seeding():
-    # Only run sqlite migrations if we are using SQLite
-    if DATABASE_URL.startswith("sqlite"):
-        import sqlite3
-        try:
-            conn = sqlite3.connect(DATABASE_URL.replace("sqlite:///", ""))
-            cursor = conn.cursor()
+    try:
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        if not db.query(User).first():
+            hashed_pw = pwd_context.hash("1234")
+            db.add(User(name="Admin", email="admin@erp.com", hashed_password=hashed_pw, role="admin"))
+            db.commit()
+        db.close()
+    except Exception as e:
+        logger.error(f"Error creating tables: {e}")
+
+@app.get("/api/migrate-data")
+async def migrate_sqlite_to_postgres(secret: str):
+    if secret != "saikat123":
+        raise HTTPException(403)
+        
+    if "sqlite" in DATABASE_URL:
+        return {"msg": "You are currently connected to SQLite, not Postgres"}
+        
+    # Open local sqlite directly
+    import sqlite3
+    import os
+    sqlite_path = os.path.join(BASE_DIR, "data", "database.sqlite")
+    if not os.path.exists(sqlite_path):
+        return {"msg": "No SQLite database found to migrate"}
+        
+    conn = sqlite3.connect(sqlite_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    db = SessionLocal()
+    
+    # Migrate Users
+    cursor.execute("SELECT * FROM users")
+    for row in cursor.fetchall():
+        if not db.query(User).filter_by(id=row["id"]).first():
+            db.add(User(id=row["id"], name=row["name"], email=row["email"], hashed_password=row["hashed_password"], role=row["role"]))
+    
+    # Migrate Products
+    cursor.execute("SELECT * FROM products")
+    for row in cursor.fetchall():
+        if not db.query(Product).filter_by(id=row["id"]).first():
+            db.add(Product(
+                id=row["id"], name=row["name"], category=row["category"], 
+                purchasePrice=row["purchasePrice"], wholesalePrice=row.get("wholesalePrice", 0), 
+                retailPrice=row.get("retailPrice", 0), stock=row["stock"], 
+                unit=row["unit"], sku=row.get("sku"), description=row.get("description"), 
+                imageUrl=row.get("imageUrl")
+            ))
             
-            # Check and add wholesalePrice and retailPrice to products if not exists
-            cursor.execute("PRAGMA table_info(products)")
-            columns = [info[1] for info in cursor.fetchall()]
-            if 'wholesalePrice' not in columns:
-                cursor.execute("ALTER TABLE products ADD COLUMN wholesalePrice FLOAT DEFAULT 0")
-            if 'retailPrice' not in columns:
-                cursor.execute("ALTER TABLE products ADD COLUMN retailPrice FLOAT DEFAULT 0")
+    # Migrate Customers
+    cursor.execute("SELECT * FROM customers")
+    for row in cursor.fetchall():
+        if not db.query(Customer).filter_by(id=row["id"]).first():
+            db.add(Customer(
+                id=row["id"], name=row["name"], phone=row["phone"], 
+                address=row.get("address"), totalDue=row.get("totalDue", 0), 
+                createdAt=row["createdAt"]
+            ))
+
+    # Migrate Sales
+    cursor.execute("SELECT * FROM sales")
+    for row in cursor.fetchall():
+        if not db.query(Sale).filter_by(id=row["id"]).first():
+            db.add(Sale(
+                id=row["id"], customerId=row.get("customerId"), customerName=row["customerName"], 
+                customerPhone=row["customerPhone"], customerAddress=row.get("customerAddress"), 
+                totalAmount=row["totalAmount"], discount=row.get("discount", 0), 
+                finalAmount=row.get("finalAmount", 0), paidAmount=row["paidAmount"], 
+                dueAmount=row["dueAmount"], paymentMethod=row.get("paymentMethod", "cash"), 
+                createdAt=row["createdAt"]
+            ))
+
+    # Migrate Sale Items
+    cursor.execute("SELECT * FROM sale_items")
+    for row in cursor.fetchall():
+        if not db.query(SaleItem).filter_by(id=row["id"]).first():
+            db.add(SaleItem(
+                id=row["id"], saleId=row["saleId"], productId=row["productId"], 
+                name=row["name"], quantity=row["quantity"], salePrice=row["salePrice"], 
+                purchasePriceAtSale=row.get("purchasePriceAtSale"), 
+                priceType=row.get("priceType", "retail"), unit=row["unit"]
+            ))
             
-            # Ensure priceType is in sale_items
-            cursor.execute("PRAGMA table_info(sale_items)")
-            columns = [info[1] for info in cursor.fetchall()]
-            if 'priceType' not in columns:
-                cursor.execute("ALTER TABLE sale_items ADD COLUMN priceType VARCHAR DEFAULT 'retail'")
-            
-            # Add finalAmount to sales if not exists
-            cursor.execute("PRAGMA table_info(sales)")
-            columns = [info[1] for info in cursor.fetchall()]
-            if 'finalAmount' not in columns:
-                cursor.execute("ALTER TABLE sales ADD COLUMN finalAmount FLOAT DEFAULT 0")
-            
-            conn.commit()
-            conn.close()
-        except Exception as e:
-            logger.error(f"Migration error: {e}")
+    # Migrate Expenses
+    cursor.execute("SELECT * FROM expenses")
+    for row in cursor.fetchall():
+        if not db.query(Expense).filter_by(id=row["id"]).first():
+            db.add(Expense(
+                id=row["id"], category=row["category"], amount=row["amount"], 
+                description=row.get("description"), date=row["date"], 
+                loggedBy=row["loggedBy"]
+            ))
+
+    db.commit()
+    conn.close()
+    return {"msg": "Migration successful"}
+def startup_seeding():
+    # Make sure tables exist in Postgres/SQLite
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        logger.error(f"Error creating tables: {e}")
 
     # Start FastAPI session to seed
     db = SessionLocal()
@@ -440,7 +512,12 @@ async def perform_sale(data: SaleCreate, user: User = Depends(get_current_user),
         if data.customerAddress: c.address = data.customerAddress
 
         # Generate a purely numeric memo ID starting from 0001
-        last_id = db.execute(text("SELECT MAX(CAST(id AS INTEGER)) FROM sales WHERE id NOT GLOB '*[^0-9]*'")).scalar()
+        if DATABASE_URL.startswith("sqlite"):
+            query = "SELECT MAX(CAST(id AS INTEGER)) FROM sales WHERE id NOT GLOB '*[^0-9]*'"
+        else:
+            query = "SELECT MAX(CAST(id AS INTEGER)) FROM sales WHERE id ~ '^[0-9]+$'"
+        
+        last_id = db.execute(text(query)).scalar()
         sid = str((last_id or 0) + 1).zfill(4)
         
         sale = Sale(id=sid, customerId=c.id, customerName=c.name, customerPhone=c.phone, customerAddress=c.address, totalAmount=data.totalAmount, discount=data.discount, finalAmount=data.finalAmount, paidAmount=data.paidAmount, dueAmount=data.dueAmount, paymentMethod=data.paymentMethod)
@@ -493,7 +570,7 @@ async def customer_payment(id: int, data: Dict[str, float], user: User = Depends
     
     amount = data.get("amount", 0)
     # Never allow due to go below 0 (no advance balance, return change to customer)
-    c.totalDue = max(0.0, c.totalDue - amount)
+    c.totalDue = float(max(0.0, float(c.totalDue) - amount))
     db.commit()
     return {"ok": True, "newBalance": c.totalDue}
 
