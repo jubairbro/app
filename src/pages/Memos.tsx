@@ -55,24 +55,13 @@ const Memos = () => {
       
       // Load fonts or wait for them
       await document.fonts.ready;
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500)); // Just 500ms
       
       const canvas = await (html2canvas as any)(element, {
-        scale: 2, // 2 is enough for good quality and keeps file size reasonable
+        scale: 1.5,
         useCORS: true,
         logging: false,
-        backgroundColor: "#ffffff",
-        allowTaint: false,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: 800,
-        onclone: (clonedDoc: Document) => {
-          const el = clonedDoc.querySelector('[data-invoice-container]') as HTMLElement;
-          if (el) {
-            el.style.width = '600px';
-            el.style.maxWidth = '600px';
-          }
-        }
+        backgroundColor: "#ffffff"
       });
       
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
@@ -166,7 +155,7 @@ const Memos = () => {
       <Card className="border-none shadow-2xl bg-card/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-primary/5">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
+            <table className="w-full min-w-[800px] text-sm text-left">
               <thead className="text-[10px] uppercase font-black tracking-widest bg-primary/5 text-primary/60 border-b border-primary/5">
                 <tr>
                   <th className="px-8 py-6">তারিখ ও সময়</th>

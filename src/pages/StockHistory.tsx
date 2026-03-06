@@ -85,7 +85,7 @@ const StockHistory = () => {
       <Card className="border-none shadow-2xl bg-card/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-primary/5">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
+            <table className="w-full min-w-[800px] text-sm text-left">
               <thead className="text-[10px] uppercase font-black tracking-widest bg-primary/5 text-primary/60 border-b border-primary/5">
                 <tr>
                   <th className="px-8 py-6">সময়</th>

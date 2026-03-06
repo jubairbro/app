@@ -200,7 +200,8 @@ const Sales = () => {
     const discountAmount = Number(discount) || 0;
     const finalAmount = totalAmount - discountAmount;
     const paid = Number(paidAmount) || 0;
-    const due = finalAmount - paid;
+    const actualPaid = Math.min(paid, finalAmount);
+    const due = Math.max(0, finalAmount - paid);
 
     try {
       const response = await fetchApi('/api/sales', {
@@ -217,7 +218,7 @@ const Sales = () => {
           totalAmount,
           discount: discountAmount,
           finalAmount,
-          paidAmount: paid,
+          paidAmount: actualPaid,
           dueAmount: due,
         }),
       });
@@ -231,7 +232,7 @@ const Sales = () => {
         totalAmount,
         discount: discountAmount,
         finalAmount,
-        paidAmount: paid,
+        paidAmount: actualPaid,
         dueAmount: due,
         createdAt: new Date()
       };
@@ -599,7 +600,7 @@ const Sales = () => {
               </div>
               <div className="flex justify-between border-t border-primary/10 pt-4 items-center">
                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  {(calculateTotal() - (Number(discount) || 0) - (Number(paidAmount) || 0)) > 0 ? "বাকি (+)" : "অ্যাডভান্স (-)"}
+                  {(calculateTotal() - (Number(discount) || 0) - (Number(paidAmount) || 0)) >= 0 ? "বাকি (+)" : "ফেরৎ (-)"}
                 </span>
                 <span className={cn(
                   "text-xl font-black tracking-tighter",
