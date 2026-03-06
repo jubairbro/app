@@ -172,14 +172,16 @@ const Layout = () => {
                       </Button>
                     </motion.div>
                   </DialogTrigger>
-                  <DialogContent className="rounded-2xl">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <Bell className="h-5 w-5 text-primary" />
+                  <DialogContent className="rounded-[2rem] border-border bg-card shadow-2xl p-0 overflow-hidden sm:max-w-[400px] sm:absolute sm:top-20 sm:right-32 sm:translate-x-0 sm:translate-y-0">
+                    <DialogHeader className="bg-muted/30 p-6 border-b border-border">
+                      <DialogTitle className="flex items-center gap-3 text-xl font-black">
+                        <div className="p-2 bg-primary/10 rounded-xl">
+                          <Bell className="h-5 w-5 text-primary" />
+                        </div>
                         নোটিফিকেশন
                       </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-3 mt-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar">
                       {notifications.length > 0 ? (
                         notifications.map((n: any, idx) => (
                           <motion.div 
@@ -187,16 +189,18 @@ const Layout = () => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
-                            className="p-4 border border-primary/10 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors"
+                            className="p-4 border border-border rounded-2xl bg-muted/20 hover:bg-muted/40 transition-colors shadow-sm group"
                           >
-                            <h4 className="font-bold text-sm text-primary">{n.title}</h4>
-                            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{n.message}</p>
+                            <h4 className="font-black text-sm text-primary group-hover:text-accent transition-colors">{n.title}</h4>
+                            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed font-medium">{n.message}</p>
                           </motion.div>
                         ))
                       ) : (
                         <div className="text-center py-12 text-muted-foreground flex flex-col items-center gap-3">
-                          <Bell className="h-10 w-10 opacity-20" />
-                          <span>কোনো নতুন নোটিফিকেশন নেই</span>
+                          <div className="p-4 rounded-full bg-muted/30">
+                            <Bell className="h-8 w-8 opacity-20" />
+                          </div>
+                          <span className="font-bold text-sm">কোনো নতুন নোটিফিকেশন নেই</span>
                         </div>
                       )}
                     </div>
@@ -211,7 +215,7 @@ const Layout = () => {
                       </Button>
                     </motion.div>
                   </DialogTrigger>
-                  <DialogContent className="w-auto p-0 border-none bg-transparent shadow-none">
+                  <DialogContent className="w-auto p-0 border-none bg-transparent shadow-none sm:absolute sm:top-20 sm:right-20 sm:translate-x-0 sm:translate-y-0">
                     <Calculator />
                   </DialogContent>
                 </Dialog>
