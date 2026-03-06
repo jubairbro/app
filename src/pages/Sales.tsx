@@ -180,7 +180,10 @@ const Sales = () => {
 
   const selectedCustomer = customers.find(c => c.id.toString() === selectedCustomerId);
 
-  const handleCheckout = async () => {
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [summaryData, setSummaryData] = useState<any>(null);
+
+  const handleCheckoutClick = () => {
     if (customerMode === "new") {
       if (!customerName || !customerPhone) {
         toast({ title: "তথ্য দিন", description: "কাস্টমারের নাম এবং মোবাইল দিন", type: "warning" });
@@ -197,8 +200,33 @@ const Sales = () => {
     const discountAmount = Number(discount) || 0;
     const finalAmount = totalAmount - discountAmount;
     const paid = Number(paidAmount) || 0;
-    const actualPaid = Math.min(paid, finalAmount);
+    
+    // Change (ফেরৎ) only happens if they pay more than the bill
+    const change = Math.max(0, paid - finalAmount);
+    // Due (বাকি) happens if they pay less than the bill
     const due = Math.max(0, finalAmount - paid);
+    // Actual money taken for THIS bill
+    const actualPaid = Math.min(paid, finalAmount);
+
+    const previousDue = selectedCustomer?.totalDue || 0;
+
+    setSummaryData({
+      totalAmount,
+      discountAmount,
+      finalAmount,
+      paid,
+      change,
+      due,
+      actualPaid,
+      previousDue
+    });
+
+    setIsCheckoutOpen(false);
+    setIsSummaryOpen(true);
+  };
+
+  const handleConfirmCheckout = async () => {
+    if (!summaryData) return;
 
     try {
       const response = await fetchApi('/api/sales', {
@@ -212,11 +240,11 @@ const Sales = () => {
           items: cart.map(({ id, name, quantity, salePrice, priceType, unit }) => ({ 
             id, name, quantity, salePrice, priceType, unit 
           })),
-          totalAmount,
-          discount: discountAmount,
-          finalAmount,
-          paidAmount: actualPaid,
-          dueAmount: due,
+          totalAmount: summaryData.totalAmount,
+          discount: summaryData.discountAmount,
+          finalAmount: summaryData.finalAmount,
+          paidAmount: summaryData.actualPaid,
+          dueAmount: summaryData.due,
         }),
       });
 
@@ -226,16 +254,16 @@ const Sales = () => {
         customerPhone: customerMode === "new" ? customerPhone : (selectedCustomer?.phone || ""),
         customerAddress: customerMode === "new" ? customerAddress : (selectedCustomer?.address || ""),
         items: [...cart],
-        totalAmount,
-        discount: discountAmount,
-        finalAmount,
-        paidAmount: actualPaid,
-        dueAmount: due,
+        totalAmount: summaryData.totalAmount,
+        discount: summaryData.discountAmount,
+        finalAmount: summaryData.finalAmount,
+        paidAmount: summaryData.actualPaid,
+        dueAmount: summaryData.due,
         createdAt: new Date()
       };
 
       setLastSale(saleData);
-      setIsCheckoutOpen(false);
+      setIsSummaryOpen(false);
       setIsSuccessOpen(true);
       
       toast({ title: "সফল", description: "বিক্রয় সম্পন্ন হয়েছে", type: "success" });
@@ -243,6 +271,7 @@ const Sales = () => {
       setIsCartMobileOpen(false);
       setCustomerName(""); setCustomerPhone(""); setCustomerAddress("");
       setPaidAmount(""); setDiscount(""); setSelectedCustomerId("");
+      setSummaryData(null);
     } catch (e: any) {
       toast({ title: "ব্যর্থ হয়েছে", description: e.message || "বিক্রয় করা সম্ভব হয়নি", type: "error" });
     }
@@ -614,11 +643,59 @@ const Sales = () => {
           
           <div className="p-10 pt-0 bg-primary/5">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button onClick={handleCheckout} className="w-full h-20 rounded-[2rem] bg-primary text-primary-foreground font-black text-xl shadow-2xl shadow-primary/30 hover:bg-primary/90 transition-all border-none">
+              <Button onClick={handleCheckoutClick} className="w-full h-20 rounded-[2rem] bg-primary text-primary-foreground font-black text-xl shadow-2xl shadow-primary/30 hover:bg-primary/90 transition-all border-none">
                 বিক্রয় নিশ্চিত করুন
               </Button>
             </motion.div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Summary Dialog before success */}
+      <Dialog open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
+        <DialogContent className="sm:max-w-[400px] rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-card/90 backdrop-blur-2xl">
+          <div className="bg-accent p-8 text-accent-foreground text-center">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black tracking-tight">হিসাব সামারি</DialogTitle>
+            </DialogHeader>
+          </div>
+          
+          {summaryData && (
+            <div className="p-8 space-y-4">
+              <div className="flex justify-between items-center text-sm font-bold border-b border-primary/10 pb-3">
+                <span className="text-muted-foreground">মোট বিল:</span>
+                <span className="text-primary text-lg">{formatCurrency(summaryData.finalAmount)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm font-bold border-b border-primary/10 pb-3">
+                <span className="text-muted-foreground">বর্তমান জমা:</span>
+                <span className="text-green-600 text-lg">{formatCurrency(summaryData.paid)}</span>
+              </div>
+              {summaryData.previousDue > 0 && (
+                <div className="flex justify-between items-center text-sm font-bold border-b border-primary/10 pb-3">
+                  <span className="text-muted-foreground">আগের বাকি:</span>
+                  <span className="text-danger text-lg">{formatCurrency(summaryData.previousDue)}</span>
+                </div>
+              )}
+              {summaryData.change > 0 && (
+                <div className="flex justify-between items-center text-sm font-black border-b border-primary/10 pb-3">
+                  <span className="text-primary">ফেরৎ দিতে হবে:</span>
+                  <span className="text-primary text-xl bg-primary/10 px-3 py-1 rounded-xl">{formatCurrency(summaryData.change)}</span>
+                </div>
+              )}
+              {summaryData.due > 0 && (
+                <div className="flex justify-between items-center text-sm font-black border-b border-primary/10 pb-3">
+                  <span className="text-danger">নতুন বাকি:</span>
+                  <span className="text-danger text-xl bg-danger/10 px-3 py-1 rounded-xl">{formatCurrency(summaryData.due)}</span>
+                </div>
+              )}
+              
+              <div className="pt-4">
+                <Button onClick={handleConfirmCheckout} className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-black text-lg hover:bg-accent/90">
+                  ওকে, মেমো দেখুন
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

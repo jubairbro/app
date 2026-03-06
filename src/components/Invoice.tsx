@@ -119,7 +119,7 @@ export const Invoice = React.forwardRef<HTMLDivElement, InvoiceProps>(({ sale },
           </div>
           <div className="flex justify-between py-1 font-bold">
             <span>বাকি:</span>
-            <span className="text-red-600">{sale.dueAmount.toLocaleString()}</span>
+            <span className="text-red-600">{sale.dueAmount > 0 ? sale.dueAmount.toLocaleString() : "00"}</span>
           </div>
         </div>
       </div>

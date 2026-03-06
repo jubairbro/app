@@ -69,15 +69,6 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           <h1 className="text-xl font-black text-accent drop-shadow-lg tracking-tight">মেসার্স সৈকত মেশিনারি</h1>
           <p className="text-[10px] text-primary-foreground/60 mt-1 italic uppercase tracking-widest font-bold">ERP Enterprise</p>
         </motion.div>
-        
-        {onClose && (
-          <button 
-            onClick={onClose}
-            className="absolute top-4 right-4 close-button md:hidden"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        )}
       </div>
       
       <nav className="flex-1 overflow-y-auto py-6 custom-scrollbar">

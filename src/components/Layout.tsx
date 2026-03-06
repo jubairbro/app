@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { Menu, Calculator as CalculatorIcon, Clock, Sun, Moon, Plus, Bell, Smartphone, Monitor } from "lucide-react";
+import { Menu, X, Calculator as CalculatorIcon, Clock, Sun, Moon, Plus, Bell, Smartphone, Monitor } from "lucide-react";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "./ui/dialog";
 import Calculator from "./Calculator";
@@ -97,16 +97,17 @@ const Layout = () => {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="hover:bg-primary/10 rounded-full"
+                  className="hover:bg-primary/10 rounded-full relative overflow-hidden"
                   onClick={() => {
                     if (window.innerWidth < 768) {
-                      setIsMobileMenuOpen(true);
+                      setIsMobileMenuOpen(!isMobileMenuOpen);
                     } else {
                       setIsDesktopSidebarOpen(!isDesktopSidebarOpen);
                     }
                   }}
                 >
-                  <Menu className="h-6 w-6" />
+                  <Menu className={cn("h-6 w-6 absolute transition-all duration-300", (isMobileMenuOpen || (!isDesktopSidebarOpen && window.innerWidth >= 768)) ? "opacity-0 scale-50 rotate-90" : "opacity-100 scale-100 rotate-0")} />
+                  <X className={cn("h-6 w-6 absolute transition-all duration-300", (isMobileMenuOpen || (!isDesktopSidebarOpen && window.innerWidth >= 768)) ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 -rotate-90")} />
                 </Button>
               </motion.div>
               <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 bg-muted/40 rounded-full text-muted-foreground border border-muted-foreground/10">
