@@ -64,7 +64,7 @@ const Dashboard = () => {
             <Zap className="h-10 w-10 text-accent" />
             ড্যাশবোর্ড ওভারভিউ
           </h1>
-          <p className="text-muted-foreground font-medium mt-1 uppercase text-[10px] tracking-[0.2em]">Mesrs Saikat Machinery ERP v3</p>
+          <p className="text-muted-foreground font-medium mt-1 uppercase text-[10px] tracking-[0.2em]">Mesrs Saikat Machinery ERP</p>
         </motion.div>
         
         <div className="flex gap-3">
