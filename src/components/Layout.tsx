@@ -80,15 +80,15 @@ const Layout = () => {
         {/* Marquee & Header */}
         <header className="bg-card/80 backdrop-blur-md border-b border-border z-30 sticky top-0 shadow-sm transition-colors duration-500">
           {/* Marquee */}
-          <div className="bg-primary/10 dark:bg-muted text-primary dark:text-muted-foreground py-2 overflow-hidden whitespace-nowrap shadow-inner border-b border-border relative z-10 backdrop-blur-md">
+          <div className="bg-primary/10 text-primary dark:bg-muted/30 dark:text-primary-foreground py-2 overflow-hidden whitespace-nowrap shadow-inner border-b border-border relative z-10 backdrop-blur-md transition-colors duration-500">
             <div className="animate-marquee inline-block">
-               <span className="mx-12 font-bold text-sm tracking-wide">বিসমিল্লাহির রাহমানির রাহিম</span>
+               <span className="mx-12 font-black text-sm tracking-wide">বিসমিল্লাহির রাহমানির রাহিম</span>
                <span className="mx-12 text-accent">●</span>
-               <span className="mx-12 font-bold text-sm tracking-wide">আসসালামু আলাইকুম</span>
+               <span className="mx-12 font-black text-sm tracking-wide">আসসালামু আলাইকুম</span>
                <span className="mx-12 text-accent">✦</span>
-               <span className="mx-12 font-bold text-sm tracking-wide">মেসার্স সৈকত মেশিনারি - প্রোঃ মোঃ বজলুর রশিদ (ভুট্টু)</span>
+               <span className="mx-12 font-black text-sm tracking-wide">মেসার্স সৈকত মেশিনারি - প্রোঃ মোঃ বজলুর রশিদ (ভুট্টু)</span>
                <span className="mx-12 text-accent">✦</span>
-               <span className="mx-12 font-bold text-sm tracking-wide">আমাদের ঠিকানা: রানীর হাট, তারাশ, সিরাজগঞ্জ। যেকোনো প্রয়োজনে সরাসরি যোগাযোগ করুন।</span>
+               <span className="mx-12 font-black text-sm tracking-wide">আমাদের ঠিকানা: রানীর হাট, তারাশ, সিরাজগঞ্জ। যেকোনো প্রয়োজনে সরাসরি যোগাযোগ করুন।</span>
             </div>
 
           </div>
