@@ -11,5 +11,4 @@ coverage/
 uploads/
 __pycache__/
 *.pyc
-data/database.sqlite
 app.log
