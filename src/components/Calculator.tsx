@@ -102,7 +102,7 @@ const Calculator = () => {
       initial={{ opacity: 0, scale: 0.95, y: -20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: -20 }}
-      className="w-full max-w-[320px] bg-card backdrop-blur-3xl p-6 rounded-[2.5rem] shadow-2xl border border-border"
+      className="w-full sm:w-[320px] bg-card backdrop-blur-3xl p-6 rounded-[2.5rem] shadow-2xl border border-border mx-auto"
     >
       <div className="mb-6 text-right bg-muted/30 p-6 rounded-3xl border border-border shadow-inner">
         <div className="text-[10px] font-black text-muted-foreground h-4 uppercase tracking-widest mb-1 overflow-hidden">

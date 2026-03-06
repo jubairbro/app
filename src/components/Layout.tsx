@@ -80,7 +80,7 @@ const Layout = () => {
         {/* Marquee & Header */}
         <header className="bg-card/80 backdrop-blur-md border-b border-border z-30 sticky top-0 shadow-sm transition-colors duration-500">
           {/* Marquee */}
-          <div className="bg-muted text-muted-foreground py-2 overflow-hidden whitespace-nowrap shadow-inner border-b border-border relative z-10">
+          <div className="bg-primary/10 dark:bg-muted text-primary dark:text-muted-foreground py-2 overflow-hidden whitespace-nowrap shadow-inner border-b border-border relative z-10 backdrop-blur-md">
             <div className="animate-marquee inline-block">
                <span className="mx-12 font-bold text-sm tracking-wide">বিসমিল্লাহির রাহমানির রাহিম</span>
                <span className="mx-12 text-accent">●</span>
@@ -215,7 +215,7 @@ const Layout = () => {
                       </Button>
                     </motion.div>
                   </DialogTrigger>
-                  <DialogContent className="w-auto p-0 border-none bg-transparent shadow-none sm:absolute sm:top-20 sm:right-20 sm:translate-x-0 sm:translate-y-0">
+                  <DialogContent className="w-full max-w-[90vw] sm:max-w-none sm:w-auto p-0 border-none bg-transparent shadow-none sm:absolute sm:top-20 sm:right-20 sm:translate-x-0 sm:translate-y-0 flex justify-center">
                     <Calculator />
                   </DialogContent>
                 </Dialog>
