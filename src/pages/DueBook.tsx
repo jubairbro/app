@@ -347,11 +347,15 @@ const DueBook = () => {
                   placeholder="0.00" 
                 />
               </div>
-              <div className="flex items-center gap-2 px-2 text-muted-foreground">
-                <History className="h-3 w-3" />
-                <p className="text-[10px] font-bold leading-relaxed italic">
-                  অতিরিক্ত জমা টাকা স্বয়ংক্রিয়ভাবে এডভান্স ব্যালেন্স হিসেবে সংরক্ষিত হবে।
-                </p>
+              <div className="flex items-center justify-between px-4 mt-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  {Number(paymentAmount) > (selectedCustomer?.totalDue || 0) ? "বাকি পরিশোধ ও ফেরৎ:" : "বর্তমান বাকি হবে:"}
+                </span>
+                <span className={cn("text-lg font-black", Number(paymentAmount) > (selectedCustomer?.totalDue || 0) ? "text-green-600" : "text-danger")}>
+                  {Number(paymentAmount) > (selectedCustomer?.totalDue || 0) 
+                    ? formatCurrency(Number(paymentAmount) - (selectedCustomer?.totalDue || 0)) + " (ফেরৎ)"
+                    : formatCurrency(Math.max(0, (selectedCustomer?.totalDue || 0) - Number(paymentAmount)))}
+                </span>
               </div>
             </div>
           </div>

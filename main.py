@@ -491,7 +491,10 @@ async def customer_payment(id: int, data: Dict[str, float], user: User = Depends
     if user.role != "admin": raise HTTPException(403)
     c = db.query(Customer).get(id)
     if not c: raise HTTPException(404, detail="কাস্টমার পাওয়া যায়নি")
-    c.totalDue -= data.get("amount", 0)
+    
+    amount = data.get("amount", 0)
+    # Never allow due to go below 0 (no advance balance, return change to customer)
+    c.totalDue = max(0.0, c.totalDue - amount)
     db.commit()
     return {"ok": True, "newBalance": c.totalDue}
 

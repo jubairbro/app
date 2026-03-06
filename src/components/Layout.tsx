@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 const Layout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
   const [time, setTime] = useState(new Date());
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -62,10 +63,14 @@ const Layout = () => {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) md:relative md:translate-x-0 shadow-2xl",
-        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        "fixed inset-y-0 left-0 z-50 transform transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) shadow-2xl overflow-hidden",
+        isMobileMenuOpen ? "translate-x-0 w-64" : "-translate-x-full w-64",
+        "md:relative md:translate-x-0",
+        isDesktopSidebarOpen ? "md:w-64" : "md:w-0"
       )}>
-        <Sidebar onClose={() => setIsMobileMenuOpen(false)} />
+        <div className="w-64 h-full">
+          <Sidebar onClose={() => setIsMobileMenuOpen(false)} />
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
@@ -92,8 +97,14 @@ const Layout = () => {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="md:hidden hover:bg-primary/10 rounded-full"
-                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="hover:bg-primary/10 rounded-full"
+                  onClick={() => {
+                    if (window.innerWidth < 768) {
+                      setIsMobileMenuOpen(true);
+                    } else {
+                      setIsDesktopSidebarOpen(!isDesktopSidebarOpen);
+                    }
+                  }}
                 >
                   <Menu className="h-6 w-6" />
                 </Button>

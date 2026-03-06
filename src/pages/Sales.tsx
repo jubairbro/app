@@ -69,18 +69,14 @@ const Sales = () => {
     if (!invoiceRef.current || !lastSale) return;
     setIsDownloading(true);
     try {
+      await document.fonts.ready;
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const canvas = await (html2canvas as any)(invoiceRef.current, { 
-        scale: 2, 
+        scale: 1.5, 
         useCORS: true,
         backgroundColor: "#ffffff",
-        windowWidth: 800,
-        onclone: (clonedDoc: Document) => {
-          const el = clonedDoc.querySelector('[data-invoice-container]') as HTMLElement;
-          if (el) {
-            el.style.width = '600px';
-            el.style.maxWidth = '600px';
-          }
-        }
+        logging: false
       });
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a5" });
@@ -88,6 +84,7 @@ const Sales = () => {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
       pdf.save(`Invoice_${lastSale.id}.pdf`);
+      toast({ title: "সফল", description: "PDF ডাউনলোড হয়েছে", type: "success" });
     } catch (e) {
       toast({ title: "ব্যর্থ", description: "PDF তৈরি করা সম্ভব হয়নি", type: "error" });
     } finally {
@@ -267,7 +264,10 @@ const Sales = () => {
           </div>
           কার্ট ({cart.length})
         </h2>
-        <Button variant="ghost" size="sm" onClick={() => setIsCartClearConfirmOpen(true)} className="text-danger font-black text-[10px] uppercase tracking-widest hover:bg-danger/10">মুছে ফেলুন</Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setIsCartClearConfirmOpen(true)} className="text-danger font-black text-[10px] uppercase tracking-widest hover:bg-danger/10">মুছে ফেলুন</Button>
+          <Button variant="ghost" size="sm" onClick={() => setIsCartMobileOpen(false)} className="lg:hidden text-muted-foreground hover:bg-muted"><X className="h-5 w-5" /></Button>
+        </div>
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
