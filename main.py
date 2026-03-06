@@ -42,8 +42,11 @@ SECRET_KEY = "saikat_machinery_super_secret_key_v3_secure" # In production, use 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30
 
-os.makedirs(DATA_DIR, exist_ok=True)
-os.makedirs(UPLOADS_DIR, exist_ok=True)
+try:
+    os.makedirs(DATA_DIR, exist_ok=True)
+    os.makedirs(UPLOADS_DIR, exist_ok=True)
+except Exception:
+    pass # Ignore read-only file system errors on serverless environments like Vercel
 
 # Supabase/Postgres doesn't need check_same_thread
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
