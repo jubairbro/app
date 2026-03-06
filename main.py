@@ -790,7 +790,10 @@ async def get_stock_logs(user: User = Depends(get_current_user), db: Session = D
     return [{"id": l[0].id, "productId": l[0].productId, "productName": l[1], "changeAmount": l[0].changeAmount, "reason": l[0].reason, "createdAt": l[0].createdAt} for l in logs]
 
 # --- Static ---
-app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+# Vercel doesn't allow static files mounts for non-existent directories, so we wrap it
+import os
+if os.path.exists(UPLOADS_DIR):
+    app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 dist_path = BASE_DIR / "dist"
 if dist_path.exists():
@@ -798,14 +801,7 @@ if dist_path.exists():
     @app.get("/{p:path}")
     async def spa_handler(p: str):
         if p.startswith("api/"): raise HTTPException(404)
-        # If it reached here and it's an upload, it means the mount failed to find it.
-        # We should still allow it to fall through or return 404.
-        if p.startswith("uploads/"): 
-             # Check if file exists, if not, it's a genuine 404
-             file_path = BASE_DIR / p
-             if file_path.exists():
-                 return FileResponse(str(file_path))
-             raise HTTPException(404)
+        if p.startswith("uploads/"): raise HTTPException(404)
         return FileResponse(str(dist_path / "index.html"))
 
 if __name__ == "__main__":
