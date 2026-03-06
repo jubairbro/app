@@ -264,7 +264,7 @@ def startup_seeding():
         db = SessionLocal()
         if not db.query(User).first():
             hashed_pw = pwd_context.hash("@Admin123")
-            db.add(User(name="Admin", email="admin@saikat.com", hashed_password=hashed_pw, role="admin"))
+            db.add(User(name="Admin", email="admin@saikat.com", password=hashed_pw, role="admin", status="active"))
             db.commit()
         db.close()
     except Exception as e:
@@ -292,10 +292,15 @@ async def migrate_sqlite_to_postgres(secret: str):
     db = SessionLocal()
     
     # Migrate Users
-    cursor.execute("SELECT * FROM users")
-    for row in cursor.fetchall():
-        if not db.query(User).filter_by(id=row["id"]).first():
-            db.add(User(id=row["id"], name=row["name"], email=row["email"], hashed_password=row["hashed_password"], role=row["role"]))
+    try:
+        cursor.execute("SELECT * FROM users")
+        for row in cursor.fetchall():
+            if not db.query(User).filter_by(id=row["id"]).first():
+                # Fix: In old DB it might be hashed_password, but our class uses password
+                pw = row["hashed_password"] if "hashed_password" in row.keys() else row.get("password", "")
+                db.add(User(id=row["id"], name=row["name"], email=row["email"], password=pw, role=row["role"], status=row.get("status", "active")))
+    except Exception as e:
+        logger.error(f"User Migration Error: {e}")
     
     # Migrate Products
     cursor.execute("SELECT * FROM products")
