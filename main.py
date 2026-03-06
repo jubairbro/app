@@ -78,7 +78,7 @@ class Product(Base):
     stock = Column(Integer, default=0)
     minStockLevel = Column(Integer, default=10)
     unit = Column(String)
-    imageUrl = Column(String, nullable=True)
+    imageUrl = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -399,6 +399,10 @@ async def logout(response: Response):
 async def get_products(db: Session = Depends(get_db)):
     return db.query(Product).order_by(Product.name).all()
 
+import base64
+from PIL import Image
+import io
+
 @app.post("/api/products")
 async def create_product(
     name: str = Form(...),
@@ -418,11 +422,21 @@ async def create_product(
     
     img_path = None
     if image:
-        ext = image.filename.split('.')[-1]
-        fname = f"{uuid.uuid4().hex[:12]}.{ext}"
-        save_path = UPLOADS_DIR / fname
-        with open(save_path, "wb") as f: shutil.copyfileobj(image.file, f)
-        img_path = f"/uploads/{fname}"
+        try:
+            content = await image.read()
+            img = Image.open(io.BytesIO(content))
+            # Compress and resize
+            img.thumbnail((300, 300))
+            if img.mode in ("RGBA", "P"): 
+                img = img.convert("RGB")
+            
+            buffered = io.BytesIO()
+            img.save(buffered, format="JPEG", quality=75)
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            img_path = f"data:image/jpeg;base64,{img_str}"
+        except Exception as e:
+            logger.error(f"Image compression error: {e}")
+            img_path = None
     
     prod = Product(name=name, category=category, purchasePrice=purchasePrice, wholesalePrice=wholesalePrice, retailPrice=retailPrice, stock=stock, unit=unit, sku=sku, description=description, imageUrl=img_path)
     db.add(prod); db.commit(); db.refresh(prod)
@@ -469,11 +483,19 @@ async def update_product(
         prod.stock = stock
         
     if image:
-        ext = image.filename.split('.')[-1]
-        fname = f"{uuid.uuid4().hex[:12]}.{ext}"
-        save_path = UPLOADS_DIR / fname
-        with open(save_path, "wb") as f: shutil.copyfileobj(image.file, f)
-        prod.imageUrl = f"/uploads/{fname}"
+        try:
+            content = await image.read()
+            img = Image.open(io.BytesIO(content))
+            img.thumbnail((300, 300))
+            if img.mode in ("RGBA", "P"): 
+                img = img.convert("RGB")
+            
+            buffered = io.BytesIO()
+            img.save(buffered, format="JPEG", quality=75)
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            prod.imageUrl = f"data:image/jpeg;base64,{img_str}"
+        except Exception as e:
+            logger.error(f"Image compression error: {e}")
     
     db.commit()
     return prod
