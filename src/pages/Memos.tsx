@@ -43,47 +43,9 @@ const Memos = () => {
     contentRef: componentRef,
   });
 
-  const handleDownloadPDF = async () => {
-    if (!componentRef.current || !selectedSale) {
-      toast({ title: "ভুল হয়েছে", description: "প্রিভিউ লোড হওয়া পর্যন্ত অপেক্ষা করুন", type: "error" });
-      return;
-    }
-    
-    setIsDownloading(true);
-    try {
-      const element = componentRef.current;
-      
-      // Load fonts or wait for them
-      await document.fonts.ready;
-      await new Promise(resolve => setTimeout(resolve, 500)); // Just 500ms
-      
-      const canvas = await (html2canvas as any)(element, {
-        scale: 1.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff"
-      });
-      
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a5",
-        putOnlyUsedFonts: true
-      });
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Memo_${selectedSale.id}.pdf`);
-      toast({ title: "সফল", description: "মেমো ডাউনলোড সম্পন্ন হয়েছে", type: "success" });
-    } catch (error) {
-      console.error("PDF Download Error:", error);
-      toast({ title: "ব্যর্থ", description: "মেমো জেনারেট করা যায়নি", type: "error" });
-    } finally {
-      setIsDownloading(false);
-    }
+  const handleDownloadPDF = () => {
+    // Merge print and download functionality. The browser's native print modal allows saving to PDF natively
+    handlePrint();
   };
 
   const openSaleDetails = (sale: Sale) => {

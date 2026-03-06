@@ -65,31 +65,9 @@ const Sales = () => {
     contentRef: invoiceRef,
   });
 
-  const handleDownloadPDF = async () => {
-    if (!invoiceRef.current || !lastSale) return;
-    setIsDownloading(true);
-    try {
-      await document.fonts.ready;
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const canvas = await (html2canvas as any)(invoiceRef.current, { 
-        scale: 1.5, 
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false
-      });
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a5" });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Invoice_${lastSale.id}.pdf`);
-      toast({ title: "সফল", description: "PDF ডাউনলোড হয়েছে", type: "success" });
-    } catch (e) {
-      toast({ title: "ব্যর্থ", description: "PDF তৈরি করা সম্ভব হয়নি", type: "error" });
-    } finally {
-      setIsDownloading(false);
-    }
+  const handleDownloadPDF = () => {
+    // For mobile devices, browser's native print-to-pdf is much more reliable and won't crash
+    handlePrint();
   };
 
   const [isCartMobileOpen, setIsCartMobileOpen] = useState(false);
