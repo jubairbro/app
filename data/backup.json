@@ -1,0 +1,130 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin",
+      "email": "admin@saikat.com",
+      "password": "$2b$12$/WqJsj20dZdHm28tgX.5CuI3cV6H9iZlcX37jlYuQaa.o4IYE759S",
+      "role": "admin",
+      "status": "active",
+      "createdAt": "2026-03-04 19:00:11.749397"
+    },
+    {
+      "id": 2,
+      "name": "\u09ae\u09be\u09b8\u09c1\u09ae",
+      "email": "dev@masum.bd",
+      "password": "$2b$12$t179qH9Ex7EyM9EY3acriuRhqR21bW/XVyJlohSJcVrg5oxukkt1a",
+      "role": "admin",
+      "status": "active",
+      "createdAt": "2026-03-04 22:22:35.636248"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "\u09ae\u09ac\u09bf\u09b2 \u09b8\u09c1\u09aa\u09be\u09b0",
+      "sku": null,
+      "category": "Mobil",
+      "purchasePrice": 450.0,
+      "wholesalePrice": 468.0,
+      "retailPrice": 500.0,
+      "stock": 195,
+      "minStockLevel": 10,
+      "unit": "Litre",
+      "imageUrl": "/uploads/af182889be87.jpg",
+      "description": null,
+      "updatedAt": "2026-03-06 17:35:48.787997"
+    }
+  ],
+  "customers": [
+    {
+      "id": 1,
+      "name": "\u09ae\u09be\u09b8\u09c1\u09ae",
+      "phone": "01912345678",
+      "address": "\u09b8\u09bf\u09b0\u09be\u099c\u0997\u099e\u09cd\u099c \u09ac\u09be\u09b2\u09c1\u099a\u09b0 ",
+      "totalDue": -10.0,
+      "loyaltyPoints": 0,
+      "updatedAt": "2026-03-06 17:07:32.697184",
+      "createdAt": "2026-03-06 17:07:32.689402"
+    }
+  ],
+  "sales": [
+    {
+      "id": "INV-2603-EFCF",
+      "customerId": 1,
+      "customerName": "\u09ae\u09be\u09b8\u09c1\u09ae",
+      "customerPhone": "01912345678",
+      "customerAddress": "\u09b8\u09bf\u09b0\u09be\u099c\u0997\u099e\u09cd\u099c \u09ac\u09be\u09b2\u09c1\u099a\u09b0 ",
+      "totalAmount": 1000.0,
+      "discount": 10.0,
+      "finalAmount": 990.0,
+      "paidAmount": 1000.0,
+      "dueAmount": -10.0,
+      "paymentMethod": "cash",
+      "createdAt": "2026-03-06 17:07:32.699794"
+    },
+    {
+      "id": "0001",
+      "customerId": 1,
+      "customerName": "\u09ae\u09be\u09b8\u09c1\u09ae",
+      "customerPhone": "01912345678",
+      "customerAddress": "\u09b8\u09bf\u09b0\u09be\u099c\u0997\u099e\u09cd\u099c \u09ac\u09be\u09b2\u09c1\u099a\u09b0 ",
+      "totalAmount": 1500.0,
+      "discount": 10.0,
+      "finalAmount": 1490.0,
+      "paidAmount": 1490.0,
+      "dueAmount": 0.0,
+      "paymentMethod": "cash",
+      "createdAt": "2026-03-06 17:35:48.790972"
+    }
+  ],
+  "sale_items": [
+    {
+      "id": 1,
+      "saleId": "INV-2603-EFCF",
+      "productId": 1,
+      "name": "\u09ae\u09ac\u09bf\u09b2 \u09b8\u09c1\u09aa\u09be\u09b0",
+      "quantity": 2,
+      "salePrice": 500.0,
+      "purchasePriceAtSale": 450.0,
+      "priceType": "retail",
+      "unit": "Litre"
+    },
+    {
+      "id": 2,
+      "saleId": "0001",
+      "productId": 1,
+      "name": "\u09ae\u09ac\u09bf\u09b2 \u09b8\u09c1\u09aa\u09be\u09b0",
+      "quantity": 3,
+      "salePrice": 500.0,
+      "purchasePriceAtSale": 450.0,
+      "priceType": "retail",
+      "unit": "Litre"
+    }
+  ],
+  "expenses": [],
+  "suppliers": [],
+  "stock_logs": [
+    {
+      "id": 1,
+      "productId": 1,
+      "changeAmount": 200,
+      "reason": "Initial Setup",
+      "createdAt": "2026-03-06 17:05:53.679082"
+    },
+    {
+      "id": 2,
+      "productId": 1,
+      "changeAmount": -2,
+      "reason": "Sale INV-2603-EFCF",
+      "createdAt": "2026-03-06 17:07:32.702913"
+    },
+    {
+      "id": 3,
+      "productId": 1,
+      "changeAmount": -3,
+      "reason": "Sale 0001",
+      "createdAt": "2026-03-06 17:35:48.794775"
+    }
+  ]
+}

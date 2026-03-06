@@ -12,3 +12,5 @@ uploads/
 __pycache__/
 *.pyc
 app.log
+.vercel
+.env*.local

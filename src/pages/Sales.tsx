@@ -744,7 +744,7 @@ const Sales = () => {
             </div>
           </div>
           
-          <div className="p-10 bg-muted/20">
+          <div className="p-2 sm:p-10 bg-muted/20">
             <div className="bg-white shadow-2xl rounded-sm overflow-x-auto border border-black/5 mx-auto w-full">
               {lastSale && <Invoice ref={invoiceRef} sale={lastSale as any} />}
             </div>
