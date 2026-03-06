@@ -24,12 +24,13 @@ const Calculator = () => {
         const cleanEq = (equation + display).replace('×', '*').replace('÷', '/');
         const result = eval(cleanEq);
         setEquation(result + " " + op + " ");
-        setDisplay(String(result));
+        setDisplay(op); // Show the operator on the main display briefly
       } catch (e) {
         setDisplay("Error");
       }
     } else {
       setEquation(display + " " + op + " ");
+      setDisplay(op); // Show the operator on the main display briefly
     }
     setIsNewNumber(true);
   }, [display, equation, isNewNumber]);
@@ -119,22 +120,22 @@ const Calculator = () => {
         <Button variant="secondary" onClick={() => handleOperator("×")} className="h-14 rounded-2xl shadow-lg font-black text-lg"><X className="h-5 w-5" /></Button>
         
         {[7, 8, 9].map(n => (
-          <Button key={n} variant="outline" onClick={() => handleNumber(String(n))} className="h-14 rounded-2xl text-lg font-black bg-white/5 border-white/5 hover:bg-primary hover:text-white transition-all shadow-md">{n}</Button>
+          <Button key={n} variant="outline" onClick={() => handleNumber(String(n))} className="h-14 rounded-2xl text-lg font-black bg-card hover:bg-primary hover:text-primary-foreground transition-all shadow-md">{n}</Button>
         ))}
         <Button variant="secondary" onClick={() => handleOperator("-")} className="h-14 rounded-2xl shadow-lg font-black text-lg"><Minus className="h-5 w-5" /></Button>
         
         {[4, 5, 6].map(n => (
-          <Button key={n} variant="outline" onClick={() => handleNumber(String(n))} className="h-14 rounded-2xl text-lg font-black bg-white/5 border-white/5 hover:bg-primary hover:text-white transition-all shadow-md">{n}</Button>
+          <Button key={n} variant="outline" onClick={() => handleNumber(String(n))} className="h-14 rounded-2xl text-lg font-black bg-card hover:bg-primary hover:text-primary-foreground transition-all shadow-md">{n}</Button>
         ))}
         <Button variant="secondary" onClick={() => handleOperator("+")} className="h-14 rounded-2xl shadow-lg font-black text-lg"><Plus className="h-5 w-5" /></Button>
         
         {[1, 2, 3].map(n => (
-          <Button key={n} variant="outline" onClick={() => handleNumber(String(n))} className="h-14 rounded-2xl text-lg font-black bg-white/5 border-white/5 hover:bg-primary hover:text-white transition-all shadow-md">{n}</Button>
+          <Button key={n} variant="outline" onClick={() => handleNumber(String(n))} className="h-14 rounded-2xl text-lg font-black bg-card hover:bg-primary hover:text-primary-foreground transition-all shadow-md">{n}</Button>
         ))}
         <Button onClick={calculate} className="h-32 row-span-2 rounded-2xl bg-accent text-accent-foreground font-black text-2xl shadow-xl shadow-accent/20 border-none"><Equal className="h-8 w-8" /></Button>
         
-        <Button variant="outline" onClick={() => handleNumber("0")} className="col-span-2 h-14 rounded-2xl text-lg font-black bg-white/5 border-white/5 hover:bg-primary hover:text-white transition-all shadow-md">0</Button>
-        <Button variant="outline" onClick={() => handleNumber(".")} className="h-14 rounded-2xl text-xl font-black bg-white/5 border-white/5 shadow-md">.</Button>
+        <Button variant="outline" onClick={() => handleNumber("0")} className="col-span-2 h-14 rounded-2xl text-lg font-black bg-card hover:bg-primary hover:text-primary-foreground transition-all shadow-md">0</Button>
+        <Button variant="outline" onClick={() => handleNumber(".")} className="h-14 rounded-2xl text-xl font-black bg-card hover:bg-primary hover:text-primary-foreground shadow-md">.</Button>
       </div>
     </motion.div>
   );
