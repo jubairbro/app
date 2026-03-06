@@ -62,16 +62,19 @@ const Layout = () => {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <div className={cn(
-        "fixed inset-y-0 left-0 z-50 transform transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) shadow-2xl overflow-hidden",
-        isMobileMenuOpen ? "translate-x-0 w-64" : "-translate-x-full w-64",
-        "md:relative md:translate-x-0",
-        isDesktopSidebarOpen ? "md:w-64" : "md:w-0"
-      )}>
+      <motion.div 
+        layout
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 shadow-2xl overflow-hidden md:relative",
+          isMobileMenuOpen ? "translate-x-0 w-64" : "-translate-x-full w-64 md:translate-x-0",
+          isDesktopSidebarOpen ? "md:w-64" : "md:w-0"
+        )}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
         <div className="w-64 h-full">
           <Sidebar onClose={() => setIsMobileMenuOpen(false)} />
         </div>
-      </div>
+      </motion.div>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Marquee & Header */}
@@ -93,7 +96,7 @@ const Layout = () => {
           {/* Top Bar */}
           <div className="flex items-center justify-between p-4 h-16">
             <div className="flex items-center gap-4">
-              <motion.div whileTap={{ scale: 0.9 }}>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}>
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -107,12 +110,12 @@ const Layout = () => {
                   }}
                 >
                   {/* Mobile Icons */}
-                  <Menu className={cn("h-6 w-6 absolute transition-all duration-300 md:hidden", isMobileMenuOpen ? "opacity-0 scale-50 rotate-90" : "opacity-100 scale-100 rotate-0")} />
-                  <X className={cn("h-6 w-6 absolute transition-all duration-300 md:hidden", isMobileMenuOpen ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 -rotate-90")} />
+                  <Menu className={cn("h-6 w-6 absolute transition-all duration-500 md:hidden", isMobileMenuOpen ? "opacity-0 scale-50 rotate-180" : "opacity-100 scale-100 rotate-0")} />
+                  <X className={cn("h-6 w-6 absolute transition-all duration-500 md:hidden", isMobileMenuOpen ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 -rotate-180")} />
                   
                   {/* Desktop Icons */}
-                  <Menu className={cn("h-6 w-6 absolute transition-all duration-300 hidden md:block", isDesktopSidebarOpen ? "opacity-0 scale-50 rotate-90" : "opacity-100 scale-100 rotate-0")} />
-                  <X className={cn("h-6 w-6 absolute transition-all duration-300 hidden md:block", isDesktopSidebarOpen ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 -rotate-90")} />
+                  <Menu className={cn("h-6 w-6 absolute transition-all duration-500 hidden md:block", isDesktopSidebarOpen ? "opacity-0 scale-50 rotate-180" : "opacity-100 scale-100 rotate-0")} />
+                  <X className={cn("h-6 w-6 absolute transition-all duration-500 hidden md:block", isDesktopSidebarOpen ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 -rotate-180")} />
                 </Button>
               </motion.div>
               <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 bg-muted/40 rounded-full text-muted-foreground border border-muted-foreground/10">
@@ -143,26 +146,31 @@ const Layout = () => {
               )}
               
               <div className="flex items-center gap-1 bg-muted/20 p-1 rounded-full border border-muted-foreground/5">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-full h-9 w-9"
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                  title="থিম পরিবর্তন"
-                >
-                  {isDarkMode ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-blue-500" />}
-                </Button>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full h-9 w-9 relative overflow-hidden"
+                    onClick={() => setIsDarkMode(!isDarkMode)}
+                    title="থিম পরিবর্তন"
+                  >
+                    <Sun className={cn("h-5 w-5 text-yellow-500 absolute transition-all duration-500", isDarkMode ? "opacity-0 rotate-90 scale-50" : "opacity-100 rotate-0 scale-100")} />
+                    <Moon className={cn("h-5 w-5 text-blue-500 absolute transition-all duration-500", isDarkMode ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-50")} />
+                  </Button>
+                </motion.div>
 
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative rounded-full h-9 w-9" title="নোটিফিকেশন">
-                      <Bell className="h-5 w-5" />
-                      {notifications.length > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[9px] font-black text-white animate-pulse border-2 border-card shadow-lg">
-                          {notifications.length > 99 ? "99+" : notifications.length}
-                        </span>
-                      )}
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button variant="ghost" size="icon" className="relative rounded-full h-9 w-9" title="নোটিফিকেশন">
+                        <Bell className="h-5 w-5 transition-all duration-300 hover:rotate-12" />
+                        {notifications.length > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[9px] font-black text-white animate-pulse border-2 border-card shadow-lg">
+                            {notifications.length > 99 ? "99+" : notifications.length}
+                          </span>
+                        )}
+                      </Button>
+                    </motion.div>
                   </DialogTrigger>
                   <DialogContent className="rounded-2xl">
                     <DialogHeader>
@@ -197,9 +205,11 @@ const Layout = () => {
 
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-9 w-9" title="ক্যালকুলেটর">
-                      <CalculatorIcon className="h-5 w-5" />
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button variant="ghost" size="icon" className="rounded-full h-9 w-9" title="ক্যালকুলেটর">
+                        <CalculatorIcon className="h-5 w-5 transition-all duration-300" />
+                      </Button>
+                    </motion.div>
                   </DialogTrigger>
                   <DialogContent className="w-auto p-0 border-none bg-transparent shadow-none">
                     <Calculator />
