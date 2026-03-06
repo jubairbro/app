@@ -65,7 +65,7 @@ except Exception:
     pass # Ignore read-only file system errors on serverless environments like Vercel
 
 # Supabase/Postgres doesn't need check_same_thread
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {"connect_timeout": 5}
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
