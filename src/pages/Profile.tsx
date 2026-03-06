@@ -196,7 +196,7 @@ const Profile = () => {
         open={isResetConfirmOpen}
         onOpenChange={setIsResetConfirmOpen}
         title="সিস্টেম রিসেট"
-        description="আপনি কি নিশ্চিত যে আপনি সকল পণ্য, বিক্রয় এবং কাস্টমার ডাটা মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা সম্ভব নয়।"
+        description="আপনি কি নিশ্চিত যে আপনি সকল পণ্য, বিক্রয় এবং কাস্টমার ডাটা মুছে ফেলতে চান? (অ্যাডমিন এবং স্টাফ অ্যাকাউন্ট মুছবে না)। এটি আর ফিরিয়ে আনা সম্ভব নয়।"
         onConfirm={handleReset}
         isLoading={resetLoading}
         confirmText="হ্যাঁ, সব মুছে ফেলুন"

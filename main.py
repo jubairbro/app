@@ -746,10 +746,19 @@ async def enterprise_backup(user: User = Depends(get_current_user)):
 @app.post("/api/admin/reset-database")
 async def system_reset(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role != "admin": raise HTTPException(403)
+    
+    # Intentionally EXCLUDING `User` from this list to preserve Admin and Staff accounts
     for tbl in [SaleItem, Sale, StockLog, Product, Customer, Expense, Supplier]:
         db.query(tbl).delete()
     db.commit()
-    for f in Path("./uploads").glob("*"): f.unlink()
+    
+    # We shouldn't delete image uploads unconditionally if we are using Base64 now, 
+    # but we will keep this for any residual local files just in case.
+    if os.path.exists(UPLOADS_DIR):
+        for f in Path(UPLOADS_DIR).glob("*"): 
+            try: f.unlink()
+            except: pass
+            
     return {"ok": True}
 
 # --- Suppliers Endpoints ---
