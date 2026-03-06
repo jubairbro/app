@@ -114,9 +114,6 @@ const Login = () => {
                     <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                       পাসওয়ার্ড
                     </label>
-                    <button type="button" className="text-[10px] font-black uppercase tracking-tighter text-primary/60 hover:text-primary">
-                      পাসওয়ার্ড ভুলে গেছেন?
-                    </button>
                   </div>
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
