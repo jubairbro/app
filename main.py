@@ -663,6 +663,22 @@ async def basic_reports(user: User = Depends(get_current_user), db: Session = De
 async def get_profile(user: User = Depends(get_current_user)):
     return {"email": user.email, "name": user.name, "role": user.role, "status": user.status}
 
+@app.put("/api/auth/profile")
+async def update_profile(data: Dict[str, Any], user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if data.get("name"):
+        user.name = data["name"]
+    if data.get("email"):
+        existing = db.query(User).filter(User.email == data["email"], User.id != user.id).first()
+        if existing:
+            raise HTTPException(400, detail="এই ইমেইল দিয়ে অলরেডি ইউজার আছে")
+        user.email = data["email"]
+    if data.get("currentPassword") and data.get("newPassword"):
+        if not verify_password(data["currentPassword"], user.password):
+            raise HTTPException(400, detail="বর্তমান পাসওয়ার্ড ভুল")
+        user.password = get_password_hash(data["newPassword"])
+    db.commit()
+    return {"ok": True, "user": {"email": user.email, "name": user.name, "role": user.role}}
+
 @app.post("/api/auth/register")
 async def register_user(data: Dict[str, Any], user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role != "admin": raise HTTPException(403, detail="অনুমতি নেই")
@@ -688,6 +704,14 @@ async def get_expenses(user: User = Depends(get_current_user), db: Session = Dep
 async def add_expense(data: ExpenseCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     exp = Expense(**data.dict())
     db.add(exp); db.commit(); return exp
+
+@app.delete("/api/expenses/{id}")
+async def delete_expense(id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403, detail="অনুমতি নেই")
+    exp = db.query(Expense).get(id)
+    if not exp: raise HTTPException(404, detail="খরচের রেকর্ড পাওয়া যায়নি")
+    db.delete(exp); db.commit()
+    return {"ok": True}
 
 # --- Advanced Reports ---
 @app.get("/api/reports/detailed")
@@ -721,6 +745,7 @@ async def dashboard_summary(db: Session = Depends(get_db)):
     return {
         "totalSales": db.query(func.sum(Sale.finalAmount)).scalar() or 0,
         "totalDue": db.query(func.sum(Customer.totalDue)).scalar() or 0,
+        "totalExpense": db.query(func.sum(Expense.amount)).scalar() or 0,
         "totalProducts": db.query(func.count(Product.id)).scalar() or 0,
         "activeStaff": db.query(func.count(User.id)).scalar() or 0,
         "lowStockItems": db.query(Product).filter(Product.stock <= Product.minStockLevel).all()
@@ -734,18 +759,144 @@ async def alerts(db: Session = Depends(get_db)):
 
 # --- System Admin ---
 @app.get("/api/admin/backup")
-async def enterprise_backup(user: User = Depends(get_current_user)):
+async def enterprise_backup(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role != "admin": raise HTTPException(403)
-    buf = BytesIO()
-    with zipfile.ZipFile(buf, 'w') as z:
-        if os.path.exists("./data/database.sqlite"): z.write("./data/database.sqlite", "database.sqlite")
-        for f in Path("./uploads").glob("*"): z.write(f, f"uploads/{f.name}")
+    
+    import json
+    
+    def serialize_row(row):
+        """Convert SQLAlchemy model to dict, handling datetime"""
+        d = {}
+        for col in row.__table__.columns:
+            val = getattr(row, col.name)
+            if isinstance(val, datetime):
+                d[col.name] = val.isoformat()
+            else:
+                d[col.name] = val
+        return d
+    
+    backup_data = {
+        "meta": {
+            "version": "3.0.0",
+            "exportedAt": datetime.utcnow().isoformat(),
+            "appName": "Saikat Machinery ERP"
+        },
+        "products": [serialize_row(r) for r in db.query(Product).all()],
+        "customers": [serialize_row(r) for r in db.query(Customer).all()],
+        "sales": [serialize_row(r) for r in db.query(Sale).all()],
+        "sale_items": [serialize_row(r) for r in db.query(SaleItem).all()],
+        "stock_logs": [serialize_row(r) for r in db.query(StockLog).all()],
+        "expenses": [serialize_row(r) for r in db.query(Expense).all()],
+        "suppliers": [serialize_row(r) for r in db.query(Supplier).all()],
+    }
+    
+    json_str = json.dumps(backup_data, ensure_ascii=False, indent=2)
+    buf = BytesIO(json_str.encode('utf-8'))
     buf.seek(0)
-    return StreamingResponse(buf, media_type="application/zip", headers={"Content-Disposition": f"attachment; filename=SaikatERP_Backup_{datetime.now().strftime('%Y%m%d')}.zip"})
+    
+    return StreamingResponse(
+        buf, 
+        media_type="application/json", 
+        headers={"Content-Disposition": f"attachment; filename=SaikatERP_Backup_{datetime.now().strftime('%Y%m%d')}.json"}
+    )
+
+@app.post("/api/admin/restore")
+async def enterprise_restore(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin": raise HTTPException(403)
+    
+    import json
+    
+    body = await request.json()
+    
+    if not body.get("meta") or not body["meta"].get("version"):
+        raise HTTPException(400, detail="এটি একটি বৈধ ব্যাকআপ ফাইল নয়")
+    
+    try:
+        # Clear existing data (preserve users)
+        for tbl in [SaleItem, Sale, StockLog, Product, Customer, Expense, Supplier]:
+            db.query(tbl).delete()
+        db.flush()
+        
+        counts = {}
+        
+        # Restore Products
+        for row in body.get("products", []):
+            row.pop("updatedAt", None)  # Let DB handle this
+            if "id" in row:
+                p = Product(**{k: v for k, v in row.items() if hasattr(Product, k)})
+                db.add(p)
+        counts["products"] = len(body.get("products", []))
+        
+        # Restore Customers
+        for row in body.get("customers", []):
+            row.pop("updatedAt", None)
+            c = Customer(**{k: v for k, v in row.items() if hasattr(Customer, k)})
+            db.add(c)
+        counts["customers"] = len(body.get("customers", []))
+        
+        # Restore Suppliers
+        for row in body.get("suppliers", []):
+            s = Supplier(**{k: v for k, v in row.items() if hasattr(Supplier, k)})
+            db.add(s)
+        counts["suppliers"] = len(body.get("suppliers", []))
+        
+        # Restore Expenses
+        for row in body.get("expenses", []):
+            e = Expense(**{k: v for k, v in row.items() if hasattr(Expense, k)})
+            db.add(e)
+        counts["expenses"] = len(body.get("expenses", []))
+        
+        db.flush()
+        
+        # Restore Sales
+        for row in body.get("sales", []):
+            s = Sale(**{k: v for k, v in row.items() if hasattr(Sale, k)})
+            db.add(s)
+        counts["sales"] = len(body.get("sales", []))
+        
+        db.flush()
+        
+        # Restore Sale Items
+        for row in body.get("sale_items", []):
+            si = SaleItem(**{k: v for k, v in row.items() if hasattr(SaleItem, k)})
+            db.add(si)
+        counts["sale_items"] = len(body.get("sale_items", []))
+        
+        # Restore Stock Logs
+        for row in body.get("stock_logs", []):
+            sl = StockLog(**{k: v for k, v in row.items() if hasattr(StockLog, k)})
+            db.add(sl)
+        counts["stock_logs"] = len(body.get("stock_logs", []))
+        
+        db.commit()
+        
+        summary_parts = []
+        if counts.get("products"): summary_parts.append(f"{counts['products']} পণ্য")
+        if counts.get("customers"): summary_parts.append(f"{counts['customers']} কাস্টমার")
+        if counts.get("sales"): summary_parts.append(f"{counts['sales']} মেমো")
+        if counts.get("expenses"): summary_parts.append(f"{counts['expenses']} খরচ")
+        if counts.get("suppliers"): summary_parts.append(f"{counts['suppliers']} সাপ্লায়ার")
+        
+        summary = ", ".join(summary_parts) + " পুনরুদ্ধার হয়েছে" if summary_parts else "ডাটা পুনরুদ্ধার হয়েছে"
+        
+        return {"ok": True, "summary": summary, "counts": counts}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Restore Error: {str(e)}")
+        raise HTTPException(500, detail=f"রিস্টোর ব্যর্থ: {str(e)}")
+
+class ResetRequest(BaseModel):
+    email: str
+    password: str
 
 @app.post("/api/admin/reset-database")
-async def system_reset(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if user.role != "admin": raise HTTPException(403)
+async def system_reset(data: ResetRequest, db: Session = Depends(get_db)):
+    # Authenticate admin by email and password (multi-step verification from /reset page)
+    admin = db.query(User).filter(User.email == data.email).first()
+    if not admin or not verify_password(data.password, admin.password):
+        raise HTTPException(401, detail="ভুল ইমেইল বা পাসওয়ার্ড")
+    if admin.role != "admin":
+        raise HTTPException(403, detail="শুধুমাত্র অ্যাডমিন রিসেট করতে পারবেন")
     
     # Intentionally EXCLUDING `User` from this list to preserve Admin and Staff accounts
     for tbl in [SaleItem, Sale, StockLog, Product, Customer, Expense, Supplier]:

@@ -19,7 +19,7 @@ import {
   History,
   CheckCircle2
 } from "lucide-react";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { fetchApi } from "@/lib/api";
 import { motion, AnimatePresence } from "motion/react";
 import { useToast } from "@/components/ui/toast";
@@ -315,7 +315,5 @@ const Suppliers = () => {
     </div>
   );
 };
-
-const cn = (...classes: any[]) => classes.filter(Boolean).join(' ');
 
 export default Suppliers;

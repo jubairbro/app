@@ -320,9 +320,13 @@ const Expenses = () => {
         description="আপনি কি নিশ্চিত যে আপনি এই খরচের রেকর্ডটি মুছে ফেলতে চান?"
         onConfirm={async () => {
           if (expenseToDelete) {
-            // Internal delete call
+            try {
+              await fetchApi(`/api/expenses/${expenseToDelete}`, { method: 'DELETE' });
+              toast({ title: "সফল", description: "রেকর্ড মুছে ফেলা হয়েছে", type: "success" });
+            } catch (error) {
+              toast({ title: "ব্যর্থ", description: "রেকর্ড মুছে ফেলা যায়নি", type: "error" });
+            }
             setIsDeleteOpen(false);
-            toast({ title: "সফল", description: "রেকর্ড মুছে ফেলা হয়েছে", type: "success" });
             fetchExpenses();
           }
         }}

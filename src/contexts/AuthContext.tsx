@@ -4,12 +4,12 @@ import { fetchApi } from "@/lib/api";
 interface User {
   id: number;
   email: string;
-  role: "admin" | "user";
+  role: "admin" | "staff";
 }
 
 interface AuthContextType {
   user: User | null;
-  role: "admin" | "user" | null;
+  role: "admin" | "staff" | null;
   loading: boolean;
   setUser: (user: User | null) => void;
 }
@@ -20,7 +20,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUserState] = useState<User | null>(null);
-  const [role, setRole] = useState<"admin" | "user" | null>(null);
+  const [role, setRole] = useState<"admin" | "staff" | null>(null);
   const [loading, setLoading] = useState(true);
 
   const setUser = (newUser: User | null) => {

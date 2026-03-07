@@ -16,6 +16,7 @@ import Expenses from "@/pages/Expenses";
 import Suppliers from "@/pages/Suppliers";
 import Staff from "@/pages/Staff";
 import StockHistory from "@/pages/StockHistory";
+import Reset from "@/pages/Reset";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/reset" element={<Reset />} />
           
           <Route element={<Layout />}>
             <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
